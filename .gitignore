@@ -1,0 +1,10 @@
+# Ignorar todo en Projects
+/Projects/*
+
+# Excluir las carpetas Src e Inc
+!/Projects/*/Src/
+!/Projects/*/Inc/
+
+# Asegurarse de que no se ignoren los archivos dentro de Src e Inc
+/Projects/*/Src/*
+/Projects/*/Inc/*
