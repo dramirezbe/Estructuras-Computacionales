@@ -14,32 +14,31 @@ Status conection = st-link = st-info --probe
 
 
 ```markdown
-- .git
-- ESTRUCTURAS-COMPUTACIONALES
-  - Apuntes
-  - datasheets
-  - Projects
-    - project_name_1
-        - .vscode
-        - build
-        - cmake
-        - Inc
-            - functions.h
-        - Src
-            - main.c
-        - Startup
-        - CMakeLists.txt
-        - CMakePresets.json
-        - stm32l476rgtx_FLASH.ld
-    - project_name_2
-        - .vscode
-        - build
-        - cmake
-        - Inc
-            - functions.h
-        - Src
-            - main.c
-        - Startup
-        - CMakeLists.txt
-        - CMakePresets.json
-        - stm32l476rgtx_FLASH.ld
+- .git  
+- Apuntes
+- datasheets
+- Projects
+- project_name_1
+    - .vscode
+    - build
+    - cmake
+    - Inc
+        - functions.h
+    - Src
+        - main.c
+    - Startup
+    - CMakeLists.txt
+    - CMakePresets.json
+    - stm32l476rgtx_FLASH.ld
+- project_name_2
+    - .vscode
+    - build
+    - cmake
+    - Inc
+        - functions.h
+    - Src
+        - main.c
+    - Startup
+    - CMakeLists.txt
+    - CMakePresets.json
+    - stm32l476rgtx_FLASH.ld
