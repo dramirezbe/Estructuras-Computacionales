@@ -1,10 +1,23 @@
-# Ignorar todo en Projects
-/Projects/*
+# Ignorar todo el contenido dentro de Projects
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/
 
 # Excluir las carpetas Src e Inc
-!/Projects/*/Src/
-!/Projects/*/Inc/
+!ESTRUCTURAS-COMPUTACIONALES/Projects/*/Src/
+!ESTRUCTURAS-COMPUTACIONALES/Projects/*/Inc/
 
-# Asegurarse de que no se ignoren los archivos dentro de Src e Inc
-/Projects/*/Src/*
-/Projects/*/Inc/*
+# Ignorar todo dentro de Src e Inc, pero no las carpetas
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/Src/*
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/Inc/*
+
+# Aceptar todo el contenido dentro de Src e Inc (recursivo)
+!ESTRUCTURAS-COMPUTACIONALES/Projects/*/Src/**
+!ESTRUCTURAS-COMPUTACIONALES/Projects/*/Inc/**
+
+# Ignorar otros archivos generados automáticamente
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/.vscode/
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/build/
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/cmake/
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/Startup/
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/CMakeLists.txt
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/CMakePresets.json
+ESTRUCTURAS-COMPUTACIONALES/Projects/*/stm32l476rgtx_FLASH.ld
