@@ -9,7 +9,7 @@ Erase = st-flash erase
 
 Read = st-flash write build/debug/programa.bin 0x8000000
 
-Status conection = st-link = st-info --probe
+Status conection st-link = st-info --probe
 
 
 
