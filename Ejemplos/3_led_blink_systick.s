@@ -1,177 +1,108 @@
-// Led_Blink_SysTick_s
-// pulseview sigrok analizador lógico
-//https://zadig.akeo.ie/ para instalar el driver para windows
-
 .syntax unified
-
 .global main
-.global SysTick_Handler
 
-.data
-contador:    .word         400000
-uwTick:     .word         0
+.section .bss
+ms_counter:  .space 4      @ Reservar una palabra para el contador de milisegundos en RAM
 
+.section .text
+.equ STK_BASE, 0xE000E010      @ Dirección base del bloque de sistema (PM0214, Pag 246)
+.equ STK_CTRL, STK_BASE + 0x00 @ Dirección del Registro de Control de SysTick (PM0214, Pag 246)
+.equ STK_LOAD, STK_BASE + 0x04 @ Dirección del Registro de Valor de Recarga de SysTick
 
-.equ SysTick_BASE,0xE000E010
-.equ SysTick_CTRL,0x0
-.equ SysTick_LOAD,0x4
-.equ SysTick_VAL,0x8
-.equ SysTick_CALIB,0xC
+.equ RCC_BASE, 0x40021000       @ Dirección base del RCC (RM0351, pag 79)
+.equ RCC_AHB2ENR, RCC_BASE + 0x4C @ AHB2ENR para habilitar el GPIOA (RM0351, pag 251)
 
-.equ SCB_BASE,0xE000ED00
-.equ SCB_SHP,0x20
+.equ GPIOA_BASE, 0x48000000         @ Dirección base de GPIOA (RM0351, pag 78)
+.equ GPIOA_MODER, GPIOA_BASE + 0x00 @ Modo del puerto GPIOA (RM0351, pag 304)
+.equ GPIOA_ODR, GPIOA_BASE + 0x14   @ Registro de salida del puerto GPIOA
+.equ LED_PIN, 5                     @ Pin 5 del puerto GPIOA para el LED
 
+.equ GPIOC_BASE, 0x48000800         @ Dirección base de GPIOC (RM0351, pag 78)
+.equ GPIOC_MODER, GPIOC_BASE + 0x00 @ Modo del puerto GPIOC (RM0351, pag 304)
+.equ GPIOC_IDR, GPIOC_BASE + 0x10   @ Registro de entreda del puerto GPIOC
+.equ BUTTON_PIN, 13                     @ Pin 13 del puerto GPIOC para el Button
 
-// Constants defined in file stm32L476xx_constants.S
-//      RCC   base address is 0x40021000
-//   AHB2ENR register offset is 0x4C
-//      RCC   base address is 0x40021000
-//   APB2ENR register offset is 0x60
-.equ    RCC_BASE,          0x40021000
-.equ    RCC_AHB2ENR,       0x4C // RCC AHB2 peripheral clock reg (RM0351, page 251) Para el pueto A
-.equ    RCC_APB2ENR,       0x60 // RCC APB2 peripheral clock reg (RM0351, page 258) Para el SysTick
-
-
-
-//      GPIOA base address is 0x48000000
-//   MODER register offset is 0x00
-//   ODR   register offset is 0x14
-.equ    GPIOA_BASE,     0x48000000 // GPIO BASE ADDRESS (RM0351, page 78)
-// .equ    GPIOB_BASE,     0x48000400
-.equ    GPIOC_BASE,     0x48000800
-// .equ    GPIOD_BASE,     0x48000C00
-// .equ    GPIOE_BASE,     0x48001000
-// .equ    GPIOF_BASE,     0x48001400
-// .equ    GPIOG_BASE,     0x48001800
-// .equ    GPIOH_BASE,     0x48001C00
-
-.equ    GPIO_MODER,       0x00 // GPIO port mode register (RM0351, page 303)
-.equ     GPIO_IDR,         0x10
-.equ    GPIO_ODR,         0x14 // GPIO outpu data register (RM0351, page 306)
-
-.section .text.main
-.type    main,%function
 main:
-////////////////////////////////////////////////////////////////
-
-// Enable SYSCFG Controller Clock (bit 0 in APB2ENR register)
-    ldr r6, =RCC_BASE       // Load peripheral clock reg address to r6
-    ldr r5, [r6,#RCC_APB2ENR]                // Read its content to r5
-    orr r5, 0x1                 // Set   bit 0 to enable SYSCFG clock
-    str r5, [r6,#RCC_APB2ENR]                // Store result in peripheral clock register
-
-// Set SysTick_CTRL to disabLe SysTick IRQ and SysTick timer
-    ldr r0, =SysTick_BASE
-
-    // DisabLe SysTick IRQ and SysTick counter, select external clock
-    mov r1, #0
-    str r1, [r0, #SysTick_CTRL]
-
-    // Specify the number of cLock cycles between two interrupts
-    ldr r2, =3999 // Change it based on interrupt interval
-    str r2, [r0, #SysTick_LOAD] // Save to SysTick reload register
-
-    // Clear SysTick current value register (SysTick_VAL)
-    mov r1, #0
-    str r1, [r0, #SysTick_VAL] // Write e to SysTick value register
-
-    // Set interrupt priority for SysTick
-    ldr r2, =SCB_BASE
-    add r2, r2, #SCB_SHP
-    ldr r1, =0xf0000000    // Set priority as 1, see Figure 11-7
-    str r1, [r2]    // SCB->SHP[ll), see Figure 11 -8
-
-    // Set SysTick_CTRL to enable SysTick timer and SysTick interrupt
-    LDR r1, [r0, #SysTick_CTRL]
-    MOV r2,#0X00000007
-    ORR r1,r1,r2  // Enable SysTick counter & interrupt
-    STR r1, [r0, #SysTick_CTRL]
-
-    // Habilitar las interrupciones Globales
-    CPSIE i
-
-
-/////////////////////////////////////////////////////////////////
-// Enable GPIOA Peripheral Clock (bit 0 in AHB2ENR register) (RM0351, page 251)
-    ldr r6, =RCC_BASE       // Load peripheral clock reg address to r6
-    ldr r5, [r6,#RCC_AHB2ENR]   // Read its content to r5
-    orr r5, 0x00000001    // AHB2 peripheral clock enable register (RCC_AHB2ENR) (RM0351, PAGE 251
-    str r5, [r6,#RCC_AHB2ENR]
-
-// Make GPIOA Pin5 as output pin (bits 1:0 in MODER register)
-    ldr r6, =GPIOA_BASE       // Load GPIOA base register address to r6
-    ldr r5, [r6,#GPIO_MODER]    // Read the content the MODER register to r5
-    orr r5, #(1<<10)              // Clear bits 11, 10 for P5 (RM0351, page 303)
-    bfc r5, #11, #1              // Write 01 to bits 11, 10 for P5 (RM0351, page 303)
-    str r5, [r6,#GPIO_MODER]    // Store result in GPIOA MODER register
-
-
-//Set pin A5
-    ldr r6, =GPIOA_BASE       // Load GPIOA MODER register address to r6
-    ldr r5, [r6,#GPIO_ODR]    // Read ODR content to r5
-    orr r5, #(1<<5)              // Set P5 (RM0351, page 306)
-    str r5, [r6,#GPIO_ODR]    // Store result in GPIOA MODER register
-
-
-
-// Enable GPIOC Peripheral Clock (bit 0 in AHB2ENR register) (RM0351, page 251)
-    ldr r6, =RCC_BASE       // Load peripheral clock reg address to r6
-    ldr r5, [r6,#RCC_AHB2ENR]   // Read its content to r5
-    orr r5, 0x00000004    // AHB2 peripheral clock enable register (RCC_AHB2ENR) (RM0351, PAGE 251
-    str r5, [r6,#RCC_AHB2ENR]
-
-// Make GPIOC Pin13 as output pin (bits 27:26 in MODER register)
-    ldr r6, =GPIOC_BASE       // Load GPIOA MODER register address to r6
-    ldr r5, [r6,#GPIO_MODER]              // Read its content to r5
-    and r5, #0xF3FFFFFF          // Write 00 to bits 27, 26 for P13
-    str r5, [r6]
+    bl init_ms_counter              @ Inicializar el contador de milisegundos
+    bl configure_systick_and_start  @ Configurar y arrancar SysTick
+    bl configure_gpio               @ Habilitar clock y configurar el GPIO para el LED
 
 loop:
+    ldr r0, [r6]            @ Leer el Registro de Control de SysTick (r6 contiene la dirección de STK_CTRL)
+    tst r0, #0x00010000     @ Probar el bit COUNTFLAG
+    beq loop                @ Si COUNTFLAG no está establecido, seguir esperando
+
+    bl increase_ms_counter_and_blink  @ Incrementar el contador de milisegundos
+    b loop                  @ Permanecer en este bucle indefinidamente
+
+@ Inicializar el contador de milisegundos
+init_ms_counter:
+    ldr r5, =ms_counter     @ Cargar la dirección de ms_counter en r5
+    mov r0, #0              @ Establecer R0 en 0
+    str r0, [r5]            @ Inicializar ms_counter a 0 (r5 contiene la dirección de ms_counter)
+    bx lr                   @ Retornar de la función
+
+@ Configurar y arrancar SysTick
+configure_systick_and_start:
+    ldr r6, =STK_CTRL       @ Cargar la dirección del Registro de Control de SysTick en r6
+    ldr r1, =STK_LOAD       @ Cargar la dirección del Registro de Valor de Recarga de SysTick en r1
+
+    mov r0, #0x4            @ Configurar SysTick para usar el reloj del procesador, deshabilitar temporalmente
+    str r0, [r6]            @ Deshabilitar SysTick para configurarlo (r6 contiene STK_CTRL)
+
+    mov r0, #3999           @ Establecer el valor de recarga para 1ms (suponiendo un reloj de sistema de 4 MHz)
+    str r0, [r1]            @ Cargar el valor de recarga (r1 contiene STK_LOAD)
+
+    mov r0, #0x5            @ Habilitar SysTick sin interrupciones y con el reloj del procesador
+    str r0, [r6]            @ Iniciar SysTick (r6 contiene STK_CTRL)
+    bx lr                   @ Retornar de la función
+
+@ Configurar GPIO y habilitar el clock para GPIOA
+configure_gpio:
+    ldr r7, =GPIOA_ODR      @ Cargar la dirección del Registro de Salida GPIOA_ODR en r7
+    ldr r0, =RCC_AHB2ENR    @ Cargar la dirección del registro RCC_AHBENR
+    ldr r1, [r0]            @ Leer el valor actual del registro RCC_AHBENR
+    orr r1, r1, #(1 << 0)   @ Habilitar el clock para GPIOA (bit 0)
+    orr r1, r1, #(4 << 0)   @ Habilitar el clock para GPIOC (bit 2)
+    str r1, [r0]            @ Almacenar el valor actualizado
+
+    ldr r0, =GPIOA_MODER    @ Cargar la dirección del registro MODER del GPIOA
+    ldr r1, [r0]            @ Leer el valor actual del registro MODER
+    bic r1, r1, #(0x3 << (LED_PIN * 2))  @ Limpiar los bits correspondientes al pin 5
+    orr r1, r1, #(0x1 << (LED_PIN * 2))  @ Configurar el pin 5 como salida (01)
+    str r1, [r0]            @ Almacenar el nuevo valor en el registro MODER
+
+    ldr r0, =GPIOC_MODER    @ Cargar la dirección del registro MODER del GPIOC
+    ldr r1, [r0]            @ Leer el valor actual del registro MODER
+    bic r1, r1, #(0x3 << (BUTTON_PIN * 2))  @ Limpiar los bits correspondientes al pin 13
+    orr r1, r1, #(0x0 << (BUTTON_PIN * 2))  @ Configurar el pin 13 como entrada (00)
+    str r1, [r0]            @ Almacenar el nuevo valor en el registro MODER
 
 
+    bx lr                   @ Retornar de la función
 
-//  Set pin A5
-    ldr r6, =GPIOA_BASE       // Load GPIOA MODER register address to r6
-    ldr r5, [r6,#GPIO_ODR]    // Read ODR content to r5
-    orr r5, #(1<<5)              // Set P5 (RM0351, page 306)
-    str r5, [r6,#GPIO_ODR]    // Store result in GPIOA MODER register
+@ Incrementar el contador de milisegundos cada 1 ms y parpadear el LED cada 500 ms
+increase_ms_counter_and_blink:
+    ldr r0, [r5]            @ Leer el valor actual de ms_counter (r5 contiene la dirección de ms_counter)
+    add r0, r0, #1          @ Incrementar el contador de milisegundos
+    str r0, [r5]            @ Almacenar el valor actualizado en ms_counter
 
-// delay1:
-    ldr r0,=contador
-    ldr r1,[r0]
-delay1:    sub r1,#1
+    cmp r0, #500            @ Comparar si han pasado 500 ms desde el último parpadeo
+    blt end_blink           @ Si no han pasado 500 ms, saltar al final
 
-    cbz r1,enddelay1
-    b delay1
-enddelay1:
+    ldr r2, =GPIOC_IDR
+    ldr r3, [r2]
+    tst r3, #(1 << BUTTON_PIN)
+    beq reset_ms_counter
 
-// Clear pin A5
-    ldr r6, =GPIOA_BASE
-    ldr r5, [r6,#GPIO_ODR]    // Read ODR content to r5
-    bfc r5, #5, #1              // Clear PA5
-    str r5, [r6,#GPIO_ODR]    // Store result in GPIOA MODER register
+    ldr r1, [r7]            @ Leer el valor actual del registro ODR (r7 contiene la dirección de GPIOA_ODR)
+    eor r1, r1, #(1 << LED_PIN)  @ Alternar el bit correspondiente al pin 5 del LED
+    str r1, [r7]            @ Almacenar el nuevo valor en el registro ODR (r7 contiene la dirección de GPIOA_ODR)
+reset_ms_counter:
+    mov r0, #0              @ Reiniciar el contador de milisegundos para el parpadeo
+    str r0, [r5]            @ Reiniciar ms_counter a 0 después del parpadeo (r5 contiene la dirección de ms_counter)
 
-/// delay2:
-    ldr r0,=contador
-    ldr r1,[r0]
-delay2:    sub r1,#1
+end_blink:
+    bx lr                   @ Retornar de la función
 
-    cbz r1,enddelay2
-    b delay2
-enddelay2:
-
-    b loop
-.size    main, .-main
-
-
-.section    .text.SysTick_Handler
-.type    SysTick_Handler,%function
-SysTick_Handler:
-    push {lr}
-    ldr r0,=uwTick
-    ldr r1,[r0]
-    add r1,#1
-    str r1,[r0]
-    pop {pc}
-    //bx lr
-.size SysTick_Handler, .-SysTick_Handler
+.end
