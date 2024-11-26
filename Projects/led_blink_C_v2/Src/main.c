@@ -50,8 +50,6 @@ typedef struct {
 /// Contador global para milisegundos
 volatile uint32_t ms_counter = 0;
 
-
-
 /**
  * @brief Configura y activa el temporizador SysTick para generar interrupciones cada 1 ms.
  */
@@ -83,25 +81,6 @@ void configure_gpio(void) {
 }
 
 /**
- * @brief Verifica el estado del botón y alterna el LED si es necesario.
- */
-void check_button_and_blink(void) {
-    ms_counter++; // Incrementa el contador de milisegundos
-
-    // Si el botón está presionado (nivel bajo en BUTTON_PIN)
-    if (!(GPIOC->IDR & (1 << BUTTON_PIN))) {
-        ms_counter = 0; // Reinicia el contador
-    }
-
-    // Si han pasado 500 ms
-    if (ms_counter >= 500) {
-        GPIOA->ODR ^= (1 << LED_PIN); // Cambia el estado del LED
-        ms_counter = 0; // Reinicia el contador después de parpadear
-    }
-}
-
-
-/**
  * @brief Función principal del programa.
  * @return Nunca retorna (bucle infinito).
  */
@@ -111,9 +90,43 @@ int main(void) {
     configure_systick_and_start(); // Configura y activa SysTick
     configure_gpio(); // Configura los pines GPIO
 
+    uint8_t state = 0; // Estado inicial de la máquina de estados
+
     while (1) { // Bucle principal
+
+        switch (state) {
+        case 0: // Estado IDLE
+            if (!(GPIOC->IDR & (1 << BUTTON_PIN))) { // Si el botón está presionado
+                state = 1; // Cambia al estado BUTTON_PRESSED
+            }
+            else if (ms_counter >= 500) { // Si han pasado 500 ms
+                state = 2;
+            }
+            break;
+
+        case 1: // Estado BUTTON_PRESSED
+            if ((GPIOC->IDR & (1 << BUTTON_PIN))) { // Si el botón está presionado
+                ms_counter = 0;
+                state = 0; // Cambia al estado BUTTON_PRESSED
+                    
+            }
+            
+            break;
+
+        case 2: // Estado TOGGLE_LED
+
+            GPIOA->ODR ^= (1 << LED_PIN); // Cambia el estado del LED
+            ms_counter = 0;
+            state = 0; // Vuelve al estado IDLE
+    
+            break;
+
+        default:
+            break;
+        }
+
         if (SysTick->CTRL & (1 << 16)) { // Verifica si se ha establecido el flag COUNTFLAG
-            check_button_and_blink(); // Verifica el botón y alterna el LED si es necesario
+            ms_counter++; // Incrementa el contador de milisegundos
         }
     }
 }

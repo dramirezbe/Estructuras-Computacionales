@@ -23,3 +23,7 @@ variable result:
  
 Hacer funciones con máximo 4 argumentos, ya que al haber más de 4, se guardarán en el registro, haciendo el programa más lento.
 
+
+# Cómo documentar programas:
+
+[página draw.io](draw.io)
