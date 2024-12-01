@@ -11,6 +11,13 @@ Read = st-flash write build/debug/programa.bin 0x8000000
 
 Status conection st-link = st-info --probe
 
+## Cómo inicializar SSH de git
+
+eval "$(ssh-agent -s)"
+
+ssh-add ~/.ssh/id_ed25519
+
+ssh -T git@github.com
 
 
 ```markdown
