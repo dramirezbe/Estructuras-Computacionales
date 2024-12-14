@@ -1,24 +1,28 @@
 # Estructuras-Computacionales
 
-## Librería necesaria en ubuntu
-sudo apt-get install libncurses6
+## Librería necesaria en ubuntu (Solo v5, la v6 no sirve ubuntu 24.0 no tiene v5)
+
+```bash
+sudo apt-get install libncurses5 
+```
 
 ## Cómo borrar Flash y cargar .elf
 
-Erase = st-flash erase
-
-Read = st-flash write build/debug/programa.bin 0x8000000
-
-Status conection st-link = st-info --probe
+```bash
+st-flash erase
+st-flash write build/debug/programa.bin 0x8000000
+st-link = st-info --probe
+```
 
 ## Cómo inicializar SSH de git
 
+```bash
 eval "$(ssh-agent -s)"
 
 ssh-add ~/.ssh/id_ed25519
 
 ssh -T git@github.com
-
+```
 
 ```markdown
 - .git  
@@ -49,3 +53,25 @@ ssh -T git@github.com
     - CMakeLists.txt
     - CMakePresets.json
     - stm32l476rgtx_FLASH.ld
+```
+
+## Cómo conectar puerto serial
+
+Evaluar puertos
+
+```bash
+sudo dmesg | grep tty
+```
+
+Verificar estado del puerto
+
+```bash
+ls -l /dev/puerto
+```
+
+Ejecutar aplicación a utilizar
+
+```bash
+gtkterm
+```
+
