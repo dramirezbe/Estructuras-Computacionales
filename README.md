@@ -72,6 +72,18 @@ ls -l /dev/puerto
 Ejecutar aplicación a utilizar
 
 ```bash
-gtkterm
+sudo putty
 ```
 
+Información GPIO
+
+pag301 rm0351
+
+
+## Contacto Monitor
+
+Juan David Martinez
+
+3118210922
+
+juamartinezs@unal.edu.co
