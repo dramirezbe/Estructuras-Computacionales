@@ -9,6 +9,9 @@ int main(void)
 {
     configure_systick_and_start();
     configure_gpio();
+
+    init_gpio_pin(GPIOA, 5, 1); // Set PA5 as output
+    init_gpio_pin(GPIOC, 13, 0); // Set PC13 as input
     
     UART_Init(USART2);
 
@@ -26,4 +29,5 @@ int main(void)
             rx_ready = 0;
         }        
     }
+
 }

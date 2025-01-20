@@ -1,0 +1,50 @@
+[
+{
+  "directory": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug",
+  "command": "/home/javastral/st/stm32cubeclt_1.17.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc -DDEBUG -I\"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Inc\" -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles/examen-dev.dir/Src/main.c.obj -c \"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/main.c\"",
+  "file": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/main.c",
+  "output": "CMakeFiles/examen-dev.dir/Src/main.c.obj"
+},
+{
+  "directory": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug",
+  "command": "/home/javastral/st/stm32cubeclt_1.17.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc -DDEBUG -I\"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Inc\" -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles/examen-dev.dir/Src/syscall.c.obj -c \"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/syscall.c\"",
+  "file": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/syscall.c",
+  "output": "CMakeFiles/examen-dev.dir/Src/syscall.c.obj"
+},
+{
+  "directory": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug",
+  "command": "/home/javastral/st/stm32cubeclt_1.17.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc -DDEBUG -I\"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Inc\" -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles/examen-dev.dir/Src/sysmem.c.obj -c \"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/sysmem.c\"",
+  "file": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/sysmem.c",
+  "output": "CMakeFiles/examen-dev.dir/Src/sysmem.c.obj"
+},
+{
+  "directory": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug",
+  "command": "/home/javastral/st/stm32cubeclt_1.17.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc -DDEBUG -I\"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Inc\" -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles/examen-dev.dir/Src/gpio.c.obj -c \"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/gpio.c\"",
+  "file": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/gpio.c",
+  "output": "CMakeFiles/examen-dev.dir/Src/gpio.c.obj"
+},
+{
+  "directory": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug",
+  "command": "/home/javastral/st/stm32cubeclt_1.17.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc -DDEBUG -I\"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Inc\" -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles/examen-dev.dir/Src/systick.c.obj -c \"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/systick.c\"",
+  "file": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/systick.c",
+  "output": "CMakeFiles/examen-dev.dir/Src/systick.c.obj"
+},
+{
+  "directory": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug",
+  "command": "/home/javastral/st/stm32cubeclt_1.17.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc -DDEBUG -I\"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Inc\" -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles/examen-dev.dir/Src/uart.c.obj -c \"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/uart.c\"",
+  "file": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/uart.c",
+  "output": "CMakeFiles/examen-dev.dir/Src/uart.c.obj"
+},
+{
+  "directory": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug",
+  "command": "/home/javastral/st/stm32cubeclt_1.17.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc -DDEBUG -I\"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Inc\" -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles/examen-dev.dir/Src/led_drive.c.obj -c \"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/led_drive.c\"",
+  "file": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Src/led_drive.c",
+  "output": "CMakeFiles/examen-dev.dir/Src/led_drive.c.obj"
+},
+{
+  "directory": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug",
+  "command": "/home/javastral/st/stm32cubeclt_1.17.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc -DDEBUG -I\"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER\" -g -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -Wall -Wextra -Wpedantic -Wno-unused-parameter -x assembler-with-cpp -MMD -MP -Og -g3 -ggdb -o CMakeFiles/examen-dev.dir/Startup/startup_stm32l476rgtx.s.obj -c \"/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Startup/startup_stm32l476rgtx.s\"",
+  "file": "/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/Startup/startup_stm32l476rgtx.s",
+  "output": "CMakeFiles/examen-dev.dir/Startup/startup_stm32l476rgtx.s.obj"
+}
+]
