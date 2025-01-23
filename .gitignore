@@ -1,20 +1,13 @@
 
-# No ignorar Src e Inc y su contenido dentro de cada subdirectorio de Projects
-!Projects/*/Src/
-!Projects/*/Src/**
-!Projects/*/Inc/
-!Projects/*/Inc/**
 
 # Ignorar específicamente las carpetas y archivos que no queremos rastrear
-Projects/*/.vscode/
-Projects/*/build/
-Projects/*/cmake/
-Projects/*/CMakeFiles/
-Projects/*/Startup/
-Projects/*/CMakeLists.txt
-Projects/*/CMakeCache.txt
-Projects/*/cmake_install.cmake
-Projects/*/build.ninja
-Projects/*/main
-Projects/*/CMakePresets.json
-Projects/*/stm32l476rgtx_FLASH.ld
+Projects/*/*/.vscode/
+Projects/*/*/build/
+Projects/*/*/CMakeFiles/
+Projects/*/*/Startup/
+Projects/*/*/CMakeCache.txt
+Projects/*/*/cmake_install.cmake
+Projects/*/*/build.ninja
+Projects/*/*/main
+Projects/*/*/stm32l476rgtx_FLASH.ld
+Projects/*/*/compile_commands.json

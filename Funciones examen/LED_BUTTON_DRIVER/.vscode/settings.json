@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "*.py": "python",
-        "systick.h": "c",
-        "led_drive.h": "c"
-    }
-}

@@ -1,3 +1,0 @@
-/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug/CMakeFiles/examen-dev.dir
-/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug/CMakeFiles/edit_cache.dir
-/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_DRIVER/build/debug/CMakeFiles/rebuild_cache.dir

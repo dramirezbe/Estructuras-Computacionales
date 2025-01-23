@@ -1,3 +1,0 @@
-/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_BUTTON_DRIVER/CMakeFiles/examen-dev.dir
-/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_BUTTON_DRIVER/CMakeFiles/edit_cache.dir
-/home/javastral/GIT/Estructuras-Computacionales/Funciones examen/LED_BUTTON_DRIVER/CMakeFiles/rebuild_cache.dir
