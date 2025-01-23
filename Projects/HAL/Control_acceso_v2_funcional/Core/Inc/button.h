@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-uint8_t button_driver_get_event(void);
-void detect_button_press(void);
+uint8_t detect_button_press(void);
 
 #endif // __BUTTON_H_

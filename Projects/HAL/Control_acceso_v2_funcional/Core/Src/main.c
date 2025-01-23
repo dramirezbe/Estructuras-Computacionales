@@ -46,6 +46,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 uint8_t rx_byte = 0;
+uint8_t b1_byte = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,7 +69,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if (GPIO_Pin == B1_Pin) {
-        detect_button_press();
+        b1_byte = detect_button_press();
     }
 }
 /* USER CODE END 0 */
@@ -119,22 +120,19 @@ int main(void)
       HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
     }
 
-    uint8_t button_event = button_driver_get_event();
-    if (button_event != 0) {
-      handle_event(button_event);
+    if (b1_byte != 0) {
+      handle_event(b1_byte);
+      b1_byte = 0;
     }
 
-    if (rx_byte == 'O' || rx_byte == 'C') {
+    if (rx_byte != 0) {
         handle_event(rx_byte);
         rx_byte = 0;
     }
 
     run_state_machine();
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-  }
   /* USER CODE END 3 */
+  }
 }
 
 /**
