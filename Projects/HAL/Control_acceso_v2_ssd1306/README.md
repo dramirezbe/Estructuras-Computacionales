@@ -1,6 +1,6 @@
 # Paso a Paso instalar librería externa
 
-1. Descargar driver
+1. Descargar driver (https://github.com/afiskon/stm32-ssd1306)
 2. Agregar unzip a carpeta External dentro de proyecto
 3. Configurar el Driver (driver-name_config.c)
 4. Inicializar nuevos periféricos (STM32CUBEMX) 

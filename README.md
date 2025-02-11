@@ -72,7 +72,7 @@ ls -l /dev/puerto
 Ejecutar aplicación a utilizar
 
 ```bash
-sudo putty
+minicom -D /dev/ttyACM0
 ```
 
 Información GPIO

@@ -25,6 +25,8 @@
 #include "state_machine.h"
 
 #include "ssd1306_fonts.h"
+#include "animation.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,6 +52,10 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 uint8_t rx_byte = 0;
 uint8_t b1_byte = 0;
+
+
+// Variable para el conteo de frames
+const uint32_t animate_count = 49;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,6 +80,35 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if (GPIO_Pin == B1_Pin) {
         b1_byte = detect_button_press();
+    }
+}
+
+void play_animation(void) {
+    // Calcular número de frames
+    const uint32_t total_frames = sizeof(evangelion_frames) / sizeof(evangelion_frames[0]);
+    
+    // Bucle principal de animación
+    while(1) {
+        for(uint32_t i = 0; i < total_frames; i++) {
+            // Limpiar buffer
+            ssd1306_Fill(Black);
+            
+            // Dibujar frame actual
+            ssd1306_DrawBitmap(
+                0,  // X position
+                0,  // Y position
+                evangelion_frames[i],  // Frame data
+                128,  // Ancho pantalla
+                64,   // Alto pantalla
+                White
+            );
+            
+            // Actualizar pantalla
+            ssd1306_UpdateScreen();
+            
+            // Delay para 15 FPS (1000ms/15 ≈ 66.67ms)
+            HAL_Delay(67);
+        }
     }
 }
 /* USER CODE END 0 */
@@ -111,8 +146,11 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   ssd1306_Init();
-  ssd1306_Fill(White);
-  ssd1306_WriteString("Hello, World!", Font_6x8, Black);
+
+  //ssd1306_Fill(Black);
+  //ssd1306_DrawBitmap(0, 0, image_data, 128, 64, White);
+  //ssd1306_Fill(White);
+  //ssd1306_WriteString("Hello, World!", Font_6x8, Black);
   
   /* USER CODE END 2 */
 
@@ -121,7 +159,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    ssd1306_UpdateScreen();
+    //ssd1306_UpdateScreen();
+    play_animation();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

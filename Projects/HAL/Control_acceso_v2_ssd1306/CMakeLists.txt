@@ -61,6 +61,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
     Core/Inc
     External/ssd1306
+    External/ssd1306/evangelion_video_images
 )
 
 # Add project symbols (macros)

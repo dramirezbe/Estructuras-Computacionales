@@ -1,4 +1,4 @@
-# Install script for directory: /home/javastral/GIT/Estructuras-Computacionales/Projects/HAL/Control_acceso_v2_vacio/cmake/stm32cubemx
+# Install script for directory: /home/javastral/GIT/Estructuras-Computacionales/Projects/HAL/Control_acceso_v2_ssd1306/cmake/stm32cubemx
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
