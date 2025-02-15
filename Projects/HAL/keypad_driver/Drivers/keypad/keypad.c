@@ -23,22 +23,22 @@ static uint8_t keypad_scan_rows(GPIO_TypeDef* COLUMN_x_GPIO_Port, uint16_t COLUM
         return 0;
     }
     HAL_GPIO_WritePin(ROW_1_GPIO_Port, ROW_1_Pin, GPIO_PIN_SET);
-    for (int i = 0; i < 20; i++);
+    for (int i = 0; i < 30; i++);
     if (HAL_GPIO_ReadPin(COLUMN_x_GPIO_Port, COLUMN_x_Pin) == GPIO_PIN_SET) {
         return 1;
     }
     HAL_GPIO_WritePin(ROW_2_GPIO_Port, ROW_2_Pin, GPIO_PIN_SET);
-    for (int i = 0; i < 20; i++);
+    for (int i = 0; i < 30; i++);
     if (HAL_GPIO_ReadPin(COLUMN_x_GPIO_Port, COLUMN_x_Pin) == GPIO_PIN_SET) {
         return 2;
     }
     HAL_GPIO_WritePin(ROW_3_GPIO_Port, ROW_3_Pin, GPIO_PIN_SET);
-    for (int i = 0; i < 20; i++);
+    for (int i = 0; i < 30; i++);
     if (HAL_GPIO_ReadPin(COLUMN_x_GPIO_Port, COLUMN_x_Pin) == GPIO_PIN_SET) {
         return 3;
     }
     HAL_GPIO_WritePin(ROW_4_GPIO_Port, ROW_4_Pin, GPIO_PIN_SET);
-    for (int i = 0; i < 20; i++);
+    for (int i = 0; i < 30; i++);
     if (HAL_GPIO_ReadPin(COLUMN_x_GPIO_Port, COLUMN_x_Pin) == GPIO_PIN_SET) {
         return 4;
     }
@@ -47,7 +47,7 @@ static uint8_t keypad_scan_rows(GPIO_TypeDef* COLUMN_x_GPIO_Port, uint16_t COLUM
 
 uint8_t keypad_scan(uint16_t GPIO_Pin)
 {
-    uint8_t key = 0;
+    uint8_t key = 'E';
     uint8_t row = 0;
     switch (GPIO_Pin)
     {
