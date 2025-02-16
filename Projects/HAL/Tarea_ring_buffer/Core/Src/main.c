@@ -18,6 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "keypad.h"
+#include "ring_buffer.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -31,7 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define BUFFER_CAPACITY 10
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -44,8 +46,13 @@ UART_HandleTypeDef huart2;
 
 
 /* USER CODE BEGIN PV */
+
 ring_buffer_t rb;
 uint8_t buffer_memory[BUFFER_CAPACITY];
+uint8_t destination_array[BUFFER_CAPACITY];
+
+uint8_t rb_array;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -84,6 +91,28 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       HAL_UART_Receive_IT(&huart2, &rx_data, 1);
     }
 }
+
+
+
+/**
+ * @brief Muestra los elementos actuales del ring buffer por UART.
+ * @param rb        Puntero a la instancia del ring buffer.
+ * @param huart     Puntero al manejador de UART para la transmisión.
+ */
+void show_rb(ring_buffer_t *rb, UART_HandleTypeDef *huart) {
+  uint8_t size = ring_buffer_size(rb); // Obtener el número de elementos en el buffer
+
+  // Transmitir los elementos por UART
+  HAL_UART_Transmit(huart, (uint8_t *)"rb:", 3, 1000); // Encabezado
+
+  // Mostrar los elementos del ring buffer
+  for (uint8_t i = 0; i < size; i++) {
+      uint8_t index = (rb->tail + i) % rb->capacity; // Calcular el índice circular
+      HAL_UART_Transmit(huart, &rb->buffer[index], 1, 1000); // Transmitir cada byte
+  }
+
+  HAL_UART_Transmit(huart, (uint8_t *)"\r\n", 2, 1000); // Nueva línea
+}
 /* USER CODE END 0 */
 
 /**
@@ -121,7 +150,7 @@ int main(void)
 
   
 
-  HAL_UART_Transmit(&huart2, (uint8_t *)"Hello, World\r\n", 14, 1000);
+  HAL_UART_Transmit(&huart2, (uint8_t *)"Hello, World\r\n", 14, HAL_MAX_DELAY);
   ring_buffer_init(&rb, buffer_memory, BUFFER_CAPACITY);
   /* USER CODE END 2 */
 
@@ -133,6 +162,10 @@ int main(void)
       uint8_t key = keypad_scan(column_pressed);
 
       ring_buffer_write(&rb, key);
+      //HAL_UART_Transmit(&huart2, (uint8_t *)&key, 1, 1000);
+      show_rb(&rb, &huart2);
+
+
 
       column_pressed = 0;
     }

@@ -8,9 +8,10 @@
  * Suitable for embedded systems using STM32 HAL.
  */
 
- #include "ring_buffer.h"
- #include <stdint.h>
+
+ # include "ring_buffer.h"
  
+
  /**
   * @brief Initialize ring buffer structure
   * @param rb        Pointer to ring buffer instance

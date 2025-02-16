@@ -31,9 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <string.h>
-#include "keypad.h"
-#include "ring_buffer.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -91,7 +89,7 @@ void Error_Handler(void);
 #define ROW_3_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+#define BUFFER_CAPACITY 10
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -7,7 +7,7 @@
 
  #ifndef INC_RING_BUFFER_H_
  #define INC_RING_BUFFER_H_
- 
+
  #include <stdint.h>
  
  typedef struct ring_buffer_ {
