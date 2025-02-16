@@ -20,6 +20,8 @@
 #include "main.h"
 #include "keypad.h"
 #include "ring_buffer.h"
+#include <string.h>
+#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -85,7 +87,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     // Verificamos que la interrupción provenga de USART2
     if (huart->Instance == USART2)
     {
-      
+      ring_buffer_write(&rb, rx_data);
+      //HAL_UART_Transmit(&huart2, (uint8_t *)&key, 1, 1000);   
 
       // Reiniciar la recepción para seguir recibiendo datos
       HAL_UART_Receive_IT(&huart2, &rx_data, 1);
@@ -113,6 +116,63 @@ void show_rb(ring_buffer_t *rb, UART_HandleTypeDef *huart) {
 
   HAL_UART_Transmit(huart, (uint8_t *)"\r\n", 2, 1000); // Nueva línea
 }
+
+/**
+ * @brief Procesa comandos en el ring buffer y ejecuta acciones.
+ * @param rb Puntero al ring buffer.
+ */
+void command_handler(ring_buffer_t *rb, uint8_t *door_status) {
+  uint8_t buffer_copy[BUFFER_CAPACITY];
+  uint8_t size = ring_buffer_size(rb);
+
+  // Copiar el contenido del buffer
+  for (uint8_t i = 0; i < size; i++) {
+      uint8_t index = (rb->tail + i) % rb->capacity;
+      buffer_copy[i] = rb->buffer[index];
+  }
+
+  // Buscar comandos de 5 caracteres
+  for (uint8_t i = 0; i <= size - 5; i++) {
+      if (buffer_copy[i] == '#' && buffer_copy[i+1] == '*' && buffer_copy[i+4] == '#') {
+          uint8_t command[5] = {
+              buffer_copy[i], buffer_copy[i+1], buffer_copy[i+2],
+              buffer_copy[i+3], buffer_copy[i+4]
+          };
+
+          if (memcmp(command, "#*A*#", 5) == 0) {
+              HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+              *door_status = 1;  // Corregido: Usa *
+              
+              rb->tail = (rb->tail + i + 5) % rb->capacity;
+              rb->is_full = 0;
+              return;
+
+          } else if (memcmp(command, "#*C*#", 5) == 0) {
+              HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+              *door_status = 0;  // Corregido: Usa *
+              
+              rb->tail = (rb->tail + i + 5) % rb->capacity;
+              rb->is_full = 0;
+              return;
+
+          } else if (memcmp(command, "#*1*#", 5) == 0) {
+              char status_msg[20];
+              snprintf(status_msg, sizeof(status_msg), "Estado: %d\r\n", *door_status);
+              HAL_UART_Transmit(&huart2, (uint8_t *)status_msg, strlen(status_msg), 1000);
+              
+              rb->tail = (rb->tail + i + 5) % rb->capacity;
+              rb->is_full = 0;
+              return;
+
+          } else if (memcmp(command, "#*0*#", 5) == 0) {
+              ring_buffer_reset(rb);
+              return;
+          }
+      }
+  }
+}
+
+uint8_t door_status = 0;
 /* USER CODE END 0 */
 
 /**
@@ -164,13 +224,14 @@ int main(void)
       ring_buffer_write(&rb, key);
       //HAL_UART_Transmit(&huart2, (uint8_t *)&key, 1, 1000);
       show_rb(&rb, &huart2);
+      HAL_UART_Receive_IT(&huart2, &rx_data, 1);
 
 
 
       column_pressed = 0;
     }
     /* USER CODE END WHILE */
-
+    command_handler(&rb, &door_status);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
