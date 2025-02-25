@@ -24,6 +24,7 @@
 #include "main.h"
 #include "keypad.h"
 #include "ring_buffer.h"
+
 #include <string.h>
 #include <stdio.h>
 /* USER CODE END Includes */
@@ -35,7 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SHOW_RB(rb, huart) show_rb(rb, huart, #rb)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,8 +51,7 @@ UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-ring_buffer_t rb_uart;
-ring_buffer_t rb_keypad;
+ring_buffer_t rb;
 uint8_t buffer_memory[BUFFER_CAPACITY];
 
 /* USER CODE END PV */
@@ -71,6 +71,7 @@ static void MX_USART3_UART_Init(void);
 uint32_t key_pressed_tick = 0;
 uint16_t column_pressed = 0;
 uint32_t debounce_tick = 0;
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if ((debounce_tick + 200) > HAL_GetTick()) {
@@ -87,11 +88,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     // Verificamos que la interrupción provenga de USART2
     if (huart->Instance == USART2)
     {
-      ring_buffer_write(&rb_uart, rx_data);
+      ring_buffer_write(&rb, rx_data);
       //HAL_UART_Transmit(&huart2, (uint8_t *)&key, 1, 1000);   
       
       // Reiniciar la recepción para seguir recibiendo datos
       HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+    }
+    if (huart->Instance == USART3) {
+      HAL_UART_Transmit(&huart3, &rx_data, 1, 1000);
+      HAL_UART_Receive_IT(&huart3, &rx_data, 1);
     }
 }
 
@@ -99,28 +104,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
  * @brief Muestra los elementos actuales del ring buffer por UART.
  * @param rb        Puntero a la instancia del ring buffer.
  * @param huart     Puntero al manejador de UART para la transmisión.
- * @param rb_name   Nombre de la variable del ring buffer (como cadena).
  */
-void show_rb(ring_buffer_t *rb, UART_HandleTypeDef *huart, const char *rb_name) {
-  uint8_t size = ring_buffer_size(rb);
-  
-  // Construir encabezado con el nombre del buffer
-  char header[50];
-  int header_len = snprintf(header, sizeof(header), "%s:", rb_name);
-  HAL_UART_Transmit(huart, (uint8_t *)header, header_len, 1000);
+void show_rb(ring_buffer_t *rb, UART_HandleTypeDef *huart) {
+  uint8_t size = ring_buffer_size(rb); // Obtener el número de elementos en el buffer
 
-  // Mostrar elementos
+  // Transmitir los elementos por UART
+  HAL_UART_Transmit(huart, (uint8_t *)"rb:", 3, 1000); // Encabezado
+
+  // Mostrar los elementos del ring buffer
   for (uint8_t i = 0; i < size; i++) {
-      uint8_t index = (rb->tail + i) % rb->capacity;
-      HAL_UART_Transmit(huart, &rb->buffer[index], 1, 1000);
+      uint8_t index = (rb->tail + i) % rb->capacity; // Calcular el índice circular
+      HAL_UART_Transmit(huart, &rb->buffer[index], 1, 1000); // Transmitir cada byte
   }
 
-  HAL_UART_Transmit(huart, (uint8_t *)"\r\n", 2, 1000);
+  HAL_UART_Transmit(huart, (uint8_t *)"\r\n", 2, 1000); // Nueva línea
 }
-
-
-
-
 
 
 
@@ -160,9 +158,12 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Transmit(&huart2, (uint8_t *)"Hello, World\r\n", 14, HAL_MAX_DELAY);
-  ring_buffer_init(&rb_uart, buffer_memory, BUFFER_CAPACITY);
-  ring_buffer_init(&rb_keypad, buffer_memory, BUFFER_CAPACITY);
+  HAL_UART_Transmit(&huart2, (uint8_t *)"Hello, stm32\r\n", 14, HAL_MAX_DELAY);
+  HAL_UART_Transmit(&huart3, (uint8_t *)"Hello, esp-wifi\r\n", 17, HAL_MAX_DELAY);
+  HAL_UART_Receive_IT(&huart3, &rx_data, 1);
+  HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+  ring_buffer_init(&rb, buffer_memory, BUFFER_CAPACITY);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -173,15 +174,15 @@ int main(void)
       uint8_t key = keypad_scan(column_pressed);
 
       //Keypad coding here with key variable
-      ring_buffer_write(&rb_keypad, key);
+      ring_buffer_write(&rb, key);
       //HAL_UART_Transmit(&huart2, (uint8_t *)&key, 1, 1000);
-      SHOW_RB(&rb_keypad, &huart2);
-      SHOW_RB(&rb_uart, &huart2);
+      show_rb(&rb, &huart2);
       
       HAL_UART_Receive_IT(&huart2, &rx_data, 1);
-
+      
       column_pressed = 0;
     }
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
