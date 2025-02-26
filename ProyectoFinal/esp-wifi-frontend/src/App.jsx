@@ -1,8 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import io from 'socket.io-client';
 import TemperatureNeedleChart from './assets/TemperatureCircularBar';
 import HumedityNeedleChart from './assets/HumedityCircularBar';
-
 import './App.css';
 
 const socket = io('http://localhost:3000', {
@@ -12,15 +11,32 @@ const socket = io('http://localhost:3000', {
 });
 
 let temp = 15;
-let hum = 20;
+let hum = 40;
 
 function App() {
   const [sliderValue, setSliderValue] = useState(5);
+  const [serverLogs, setServerLogs] = useState([]);  // Estado como array
 
   const handleSliderChange = useCallback((e) => {
     const value = parseInt(e.target.value);
     setSliderValue(value);
     socket.emit('sliderValue', value);
+  }, []);
+
+  useEffect(() => {
+    socket.on('serverLog', (message) => {
+      setServerLogs((prevLogs) => {
+        // Agrega el nuevo mensaje y mantiene máximo 10 logs
+        const updatedLogs = [...prevLogs, message];
+        return updatedLogs.length > 10 
+          ? [updatedLogs[0], ...updatedLogs.slice(-9)]  // Mantiene el mensaje inicial + últimos 9
+          : updatedLogs;
+      });
+    });
+
+    return () => {
+      socket.off('serverLog');
+    };
   }, []);
 
   return (
@@ -29,14 +45,13 @@ function App() {
         <h1>Domotización - Control de Bombilla</h1>
       </header>
       
-      <p>{temp}</p>
       <div className='grid-container'>
         
         <section className="bombilla">
           <h2>Bombilla</h2>
           <input
             type="range"
-            min="1"
+            min="0"
             max="10"
             value={sliderValue}
             onChange={handleSliderChange}
@@ -46,38 +61,38 @@ function App() {
           <p>Description: lorem ipsum</p>
         </section>
 
-        //Sección del Sensor
+        
         <section className="sensor">
             <h2>Sensor de Temperatura y Humedad</h2>
             <div className="sensor">
                 <div className="datos-sensor">
                     <div className="dato">
-                    <TemperatureNeedleChart temp={temp}/>
+                      <TemperatureNeedleChart temp={temp}/>
+                      <p className="sensor-info">
+                        <span className="sensor-titulo">Temperatura:</span>
+                        <span className="sensor-valor">{temp}°C</span>
+                      </p>
                     </div>
                     <div className="dato">
                       <HumedityNeedleChart hum={hum}/>
+                      <p className="sensor-info">
+                        <span className="sensor-titulo">Humedad:</span>
+                        <span className="sensor-valor">{hum}%</span>
+                      </p>
                     </div>
                 </div>
-                <div className="imagen-referencia">
-
-                </div>
-                <p>Pequeña descripción</p>
             </div>
         </section>
-        //Sección del Estado del Servidor
+
         <section className="estado-servidor">
             <h2>Estado del Servidor</h2>
             <div className="estado-servidor">
-                <div className="estado">
-                    <span className="indicador" id="indicador-servidor"></span>
-                    <span id="texto-estado">Cargando...</span>
+                <div className='server-log'>
+                  <pre>{serverLogs.join('\n')}</pre>  {/* Une los logs con saltos de línea */}
                 </div>
-                <p>Pequeña descripción</p>
             </div>
-            
         </section>
 
-        //Sección de la Gráfica de Lumens
         <section className="grafica-lumens">
             <h2>Gráfica de Lumens</h2>
             <div className="grafica-tiempo-real">

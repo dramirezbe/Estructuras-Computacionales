@@ -53,7 +53,7 @@ export default class HumedityNeedleChart extends PureComponent {
   render() {
     const { hum } = this.props; // Se recibe la temperatura vía props
     return (
-      <PieChart width={400} height={500}>
+      <PieChart width={300} height={200}>
         <Pie
           dataKey="value"
           startAngle={180}
