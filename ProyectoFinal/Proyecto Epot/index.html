@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domotización - Control de Bombilla</title>
+    <!-- Conexión al archivo CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<script>
+    function actualizarValor(valor) {
+        document.getElementById("valor-lumens").innerText = valor;
+    }
+</script>
+
+<body>
+    <!-- Encabezado -->
+    <header>
+        <h1>Domotización - Control de Bombilla</h1>
+    </header>
+
+    <!-- Contenedor principal para el grid -->
+    <div class="grid-container">
+        <!-- Sección de Bombilla -->
+        <section class="bombilla">
+            <h2>Bombilla</h2>
+            <label for="lumens-slider">Lumens:</label>
+            <input type="range" id="lumens-slider" min="1" max="10" value="5" step="1" oninput="actualizarValor(this.value)">
+            <span id="valor-lumens">5</span>
+            <p>Pequeña descripción</p>
+        </section>
+
+        <!-- Sección del Sensor -->
+        <section class="sensor">
+            <h2>Sensor de Temperatura y Humedad</h2>
+            <div class="sensor">
+                <div class="datos-sensor">
+                    <div class="dato">
+                        <label>Temperatura:</label>
+                        <span id="valor-temperatura">-- °C</span>
+                    </div>
+                    <div class="dato">
+                        <label>Humedad:</label>
+                        <span id="valor-humedad">-- %</span>
+                    </div>
+                </div>
+                <div class="imagen-referencia">
+                    <img src="ruta/a/imagen.jpg" alt="Referencia del Sensor">
+                </div>
+                <p>Pequeña descripción</p>
+            </div>
+            
+        </section>
+
+        <!-- Sección del Estado del Servidor -->
+        <section class="estado-servidor">
+            <h2>Estado del Servidor</h2>
+            <div class="estado-servidor">
+                <div class="estado">
+                    <span class="indicador" id="indicador-servidor"></span>
+                    <span id="texto-estado">Cargando...</span>
+                </div>
+                <p>Pequeña descripción</p>
+            </div>
+            
+        </section>
+
+        <!-- Sección de la Gráfica de Lumens -->
+        <section class="grafica-lumens">
+            <h2>Gráfica de Lumens</h2>
+            <div class="grafica-tiempo-real">
+                <h2>Gráfica de Lumens en Tiempo Real</h2>
+                <div class="contenedor-grafica">
+                    <canvas id="grafica-lumens"></canvas>
+                </div>
+                <p>Pequeña descripción</p>
+            </div>
+            
+        </section>
+    </div>
+    <script src="script.js"></script>
+
+</body>
