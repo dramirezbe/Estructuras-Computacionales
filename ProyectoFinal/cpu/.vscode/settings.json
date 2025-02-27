@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "*.py": "python",
-        "main.h": "c",
-        "ring_buffer.h": "c"
-    }
-}
