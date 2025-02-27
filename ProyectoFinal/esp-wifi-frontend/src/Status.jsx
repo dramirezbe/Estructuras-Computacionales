@@ -1,25 +1,28 @@
 import { useEffect, useState } from "react";
+import io from "socket.io-client";
+
+const socket = io("http://localhost:3000"); // Conéctate al servidor Express
 
 const Status = () => {
   const [logs, setLogs] = useState([]);
   const [serverStatus, setServerStatus] = useState("Cargando...");
 
   useEffect(() => {
-    const eventSource = new EventSource("http://localhost:5000/logs");
-
-    eventSource.onmessage = (event) => {
-      const newLog = JSON.parse(event.data);
-      setLogs((prevLogs) => [...prevLogs, newLog]);
-
+    // Escuchar logs desde el servidor
+    socket.on("serverLog", (message) => {
+      setLogs((prevLogs) => [...prevLogs, message]);
       setServerStatus("En funcionamiento");
-    };
+    });
 
-    eventSource.onerror = () => {
+    // Manejo de desconexión
+    socket.on("disconnect", () => {
       setServerStatus("Desconectado");
-      eventSource.close();
-    };
+    });
 
-    return () => eventSource.close();
+    return () => {
+      socket.off("serverLog");
+      socket.off("disconnect");
+    };
   }, []);
 
   return (
@@ -34,12 +37,12 @@ const Status = () => {
       </div>
       <p>Pequeña descripción</p>
       <div className="logs">
-        <h3>Logs:</h3>
-        <ul>
+        <h3>Logs del Servidor:</h3>
+        <pre>
           {logs.map((log, index) => (
-            <li key={index}>{log.message}</li>
+            <div key={index}>{log}</div>
           ))}
-        </ul>
+        </pre>
       </div>
     </section>
   );
