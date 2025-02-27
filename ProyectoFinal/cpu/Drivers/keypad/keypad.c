@@ -92,3 +92,25 @@ uint8_t keypad_scan(uint16_t GPIO_Pin) {
   
   return key;
 }
+
+uint32_t key_pressed_tick = 0;
+uint16_t column_pressed = 0;
+uint32_t debounce_tick = 0;
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    if ((debounce_tick + 200) > HAL_GetTick()) {
+        return;
+    }
+    debounce_tick = HAL_GetTick();
+    key_pressed_tick = HAL_GetTick();
+    column_pressed = GPIO_Pin;
+}
+
+uint8_t keypad_get_pressed_key() {
+    if (column_pressed != 0 && (key_pressed_tick + 5) < HAL_GetTick()) {
+        uint8_t key = keypad_scan(column_pressed);
+        column_pressed = 0;
+        return key;
+    }
+    return 0;
+}

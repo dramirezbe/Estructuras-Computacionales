@@ -32,6 +32,12 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "ring_buffer.h"
+
+#include <string.h>
+#include <stdio.h>
+#include <stdint.h>
+/* USER CODE END Includes */
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -95,6 +101,8 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 #define BUFFER_CAPACITY 32
+
+#define PASSWORD "2806"
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

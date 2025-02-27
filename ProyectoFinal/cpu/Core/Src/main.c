@@ -19,15 +19,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+#include "keypad.h"
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "main.h"
-#include "keypad.h"
-#include "ring_buffer.h"
 
-#include <string.h>
-#include <stdio.h>
-/* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
@@ -68,19 +66,6 @@ static void MX_USART3_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t key_pressed_tick = 0;
-uint16_t column_pressed = 0;
-uint32_t debounce_tick = 0;
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  if ((debounce_tick + 200) > HAL_GetTick()) {
-    return;
-  }
-  debounce_tick = HAL_GetTick();
-  key_pressed_tick = HAL_GetTick();
-  column_pressed = GPIO_Pin;
-}
 
 uint8_t rx_data;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -89,36 +74,25 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     if (huart->Instance == USART2)
     {
       ring_buffer_write(&rb, rx_data);
+      show_rb(&rb, &huart2);
       //HAL_UART_Transmit(&huart2, (uint8_t *)&key, 1, 1000);   
       
       // Reiniciar la recepción para seguir recibiendo datos
       HAL_UART_Receive_IT(&huart2, &rx_data, 1);
     }
     if (huart->Instance == USART3) {
+      HAL_UART_Transmit(&huart3, (uint8_t *)"[esp-wifi]:", 11, 1000);
       HAL_UART_Transmit(&huart3, &rx_data, 1, 1000);
+      HAL_UART_Transmit(&huart3, (uint8_t *)"\r\n", 2, 1000);
+
+      ring_buffer_write(&rb, rx_data);
+      show_rb(&rb, &huart3);
+
       HAL_UART_Receive_IT(&huart3, &rx_data, 1);
     }
 }
 
-/**
- * @brief Muestra los elementos actuales del ring buffer por UART.
- * @param rb        Puntero a la instancia del ring buffer.
- * @param huart     Puntero al manejador de UART para la transmisión.
- */
-void show_rb(ring_buffer_t *rb, UART_HandleTypeDef *huart) {
-  uint8_t size = ring_buffer_size(rb); // Obtener el número de elementos en el buffer
 
-  // Transmitir los elementos por UART
-  HAL_UART_Transmit(huart, (uint8_t *)"rb:", 3, 1000); // Encabezado
-
-  // Mostrar los elementos del ring buffer
-  for (uint8_t i = 0; i < size; i++) {
-      uint8_t index = (rb->tail + i) % rb->capacity; // Calcular el índice circular
-      HAL_UART_Transmit(huart, &rb->buffer[index], 1, 1000); // Transmitir cada byte
-  }
-
-  HAL_UART_Transmit(huart, (uint8_t *)"\r\n", 2, 1000); // Nueva línea
-}
 
 
 
@@ -170,25 +144,17 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    if (column_pressed != 0 && (key_pressed_tick + 5) < HAL_GetTick() ) {
-      uint8_t key = keypad_scan(column_pressed);
-
-      //Keypad coding here with key variable
+    uint8_t key = keypad_get_pressed_key();
+    if (key) {
       ring_buffer_write(&rb, key);
-      //HAL_UART_Transmit(&huart2, (uint8_t *)&key, 1, 1000);
       show_rb(&rb, &huart2);
-      
-      HAL_UART_Receive_IT(&huart2, &rx_data, 1);
-      
-      column_pressed = 0;
     }
-    
+  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
 }
+  /* USER CODE END 3 */
 
 /**
   * @brief System Clock Configuration

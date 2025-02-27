@@ -12,4 +12,6 @@ extern const uint8_t keypad_map[ROWS][COLS];
 void keypad_init(void);
 uint8_t keypad_scan(uint16_t GPIO_Pin);
 
+uint8_t keypad_get_pressed_key();
+
 #endif
