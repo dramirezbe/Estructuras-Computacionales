@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import io from 'socket.io-client';
 import TemperatureNeedleChart from './assets/TemperatureCircularBar';
 import HumedityNeedleChart from './assets/HumedityCircularBar';
+import Status from './Status';
 import './App.css';
 
 const socket = io('http://localhost:3000', {
@@ -84,14 +85,8 @@ function App() {
             </div>
         </section>
 
-        <section className="estado-servidor">
-            <h2>Estado del Servidor</h2>
-            <div className="estado-servidor">
-                <div className='server-log'>
-                  <pre>{serverLogs.join('\n')}</pre>  {/* Une los logs con saltos de línea */}
-                </div>
-            </div>
-        </section>
+        {/* Muestra el estado del servidor y logs en tiempo real */}
+        <Status />
 
         <section className="grafica-lumens">
             <h2>Gráfica de Lumens</h2>
