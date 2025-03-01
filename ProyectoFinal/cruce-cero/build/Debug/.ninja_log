@@ -1,0 +1,26 @@
+# ninja log v5
+5	691	1740752690663922443	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c.obj	e4c084bff21de3fa
+455	908	1740752690880928403	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c.obj	f3d7db3a3d6065d6
+937	1018	1740752690992931480	CMakeFiles/cruce-cero.dir/startup_stm32l476xx.s.obj	cf869093bcb10d87
+908	1045	1740752691026932414	CMakeFiles/cruce-cero.dir/Core/Src/syscalls.c.obj	beb3a12912e58fef
+394	902	1740752690877928321	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c.obj	6eb8376fa8a5d636
+13	385	1740752690364914229	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c.obj	464b08d455740445
+11	394	1740752690373914477	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c.obj	523a3391598281fb
+389	837	1740752690818926700	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ramfunc.c.obj	1025db9cdf7e2495
+2	678	1740752690656922250	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c.obj	df8679f1e1476945
+491	934	1740752690910929228	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma_ex.c.obj	3594c53f83a26b1d
+474	1008	1740752690984931260	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c.obj	2182daa771d2afa5
+391	1020	1740752690994931535	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c.obj	abe504a8297d6ca7
+838	1215	1740752691195937058	CMakeFiles/cruce-cero.dir/Core/Src/system_stm32l4xx.c.obj	a5d15ef14fd5b758
+6	493	1740752690472917196	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc_ex.c.obj	c137638f29a86c8c
+679	1174	1740752691154935931	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c.obj	345868c045de8a0
+2	230	1740754761182276602	CMakeFiles/cruce-cero.dir/Core/Src/stm32l4xx_it.c.obj	8b60d4a923871db9
+902	1026	1740752691009931947	CMakeFiles/cruce-cero.dir/Core/Src/sysmem.c.obj	b8ee6bca00398415
+691	1196	1740752691176936536	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_exti.c.obj	4c8b1e7b18631374
+2	268	1740754954076574985	CMakeFiles/cruce-cero.dir/Core/Src/main.c.obj	330b66c022f000f2
+672	1212	1740752691192936976	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr_ex.c.obj	1fd4c498b1813274
+268	382	1740754954188595513	cruce-cero.elf	a1d838ed7d84c686
+493	1050	1740752691026932414	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr.c.obj	fbf2312f4f5049bb
+4	455	1740752690433916125	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c.obj	ea87205f3e9ba234
+3	232	1740754761184275164	CMakeFiles/cruce-cero.dir/Core/Src/stm32l4xx_hal_msp.c.obj	ed93d11778864104
+4	671	1740752690651922113	CMakeFiles/cruce-cero.dir/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c.obj	e14ec5866e93484b

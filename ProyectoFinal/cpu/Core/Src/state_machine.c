@@ -72,6 +72,8 @@ void handle_keypad_instruction(ring_buffer_t *rb) {
         case 2:
             //lock_door();
             break;
+        case 3:
+            break;
         default:
             break;
 
@@ -79,7 +81,11 @@ void handle_keypad_instruction(ring_buffer_t *rb) {
 
 }
 
-
+/**
+ * @brief Verificar si la contraseña ingresada es correcta
+ * @param rb: Puntero al ring buffer
+ * @retval 1 si la contraseña es correcta, 0 si no
+ */
 uint8_t handle_password(ring_buffer_t *rb) {
     // Verificar si el ring buffer tiene exactamente 4 caracteres
     if (ring_buffer_size(rb) != 4 || ring_buffer_is_empty(rb)) {
@@ -102,4 +108,9 @@ uint8_t handle_password(ring_buffer_t *rb) {
     } else {
         return 0;
     }
+}
+
+void unlock_door() {
+    door_status = 1;
+    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 }

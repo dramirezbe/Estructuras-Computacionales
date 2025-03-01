@@ -1,0 +1,5 @@
+/home/javastral/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/CMakeFiles/cruce-cero.dir
+/home/javastral/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/CMakeFiles/edit_cache.dir
+/home/javastral/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/CMakeFiles/rebuild_cache.dir
+/home/javastral/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
+/home/javastral/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir

@@ -52,6 +52,7 @@ UART_HandleTypeDef huart3;
 ring_buffer_t rb;
 uint8_t buffer_memory[BUFFER_CAPACITY];
 
+uint8_t door_status = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,11 +93,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     }
 }
 
+void heartbeat(void)
+{
+  static uint32_t last_heartbeat = 0;
+  if (HAL_GetTick() - last_heartbeat > 1000)
+  {
+    last_heartbeat = HAL_GetTick();
+    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+  }
+}
 
-
-
-
-uint8_t door_status = 0;
 /* USER CODE END 0 */
 
 /**

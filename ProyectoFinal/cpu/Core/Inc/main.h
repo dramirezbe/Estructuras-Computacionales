@@ -103,6 +103,8 @@ void Error_Handler(void);
 #define BUFFER_CAPACITY 32
 
 #define PASSWORD "2806"
+
+extern uint8_t door_status;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
