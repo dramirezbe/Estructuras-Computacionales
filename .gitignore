@@ -2,7 +2,7 @@
 
 # Ignorar específicamente las carpetas y archivos que no queremos rastrear
 
-**/build/
+
 **/CMakeFiles/
 **/Startup/
 **/CMakeCache.txt
