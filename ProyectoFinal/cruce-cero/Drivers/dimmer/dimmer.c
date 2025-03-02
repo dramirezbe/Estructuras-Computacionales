@@ -5,9 +5,6 @@ static volatile uint32_t i = 0;         // Contador del timer (cada 100 µs)
 static volatile uint8_t cruce_cero = 0;   // Flag que se activa al detectar el cruce por cero
 static uint32_t dim = 0;                // Valor que controla el disparo del triac (0 a 83)
 
-// Variable para recepción UART (1 byte)
-static uint8_t rx_data;  
-
 /**
   * @brief  Inicializa las variables internas del módulo.
   * @note   Se puede llamar al inicio desde main().
@@ -17,7 +14,6 @@ void Dimmer_Init(void)
   i = 0;
   cruce_cero = 0;
   dim = 0;
-  rx_data = 0;
 }
 
 /**
@@ -28,8 +24,6 @@ void Dimmer_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim->Instance == TIM2)
   {
-    if (cruce_cero)
-    {
       if (i >= dim)
       {
         // Dispara el triac (configurado en un pin de salida)
@@ -42,23 +36,19 @@ void Dimmer_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         i++;
       }
     }
-  }
 }
 
 /**
   * @brief  Función a llamar desde HAL_GPIO_EXTI_Callback.
   * @param  GPIO_Pin: Pin que generó la interrupción.
   */
-void Dimmer_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+void Dimmer_GPIO_EXTI_Callback()
 {
-  if(GPIO_Pin == ZERO_DETECT_Pin)
-  {
     // Al detectar el rising edge (con configuración pull-up) se reinicia el contador
     // y se apaga el triac (se pone en LOW) para iniciar el retardo.
     cruce_cero = 1;
     i = 0;
     HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_RESET);
-  }
 }
 
 /**
@@ -68,10 +58,8 @@ void Dimmer_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   * Se espera que se reciba un dígito (carácter '0' a '9'). Se convierte ese dígito
   * en un valor entre 0 y 83, invertido (es decir, '0' => 83 y '9' => 0).
   */
-void Dimmer_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+void Dimmer_UART_RxCpltCallback(UART_HandleTypeDef *huart, uint8_t rx_data)
 {
-  if (huart->Instance == USART2)
-  {
     // Se verifica que el byte recibido sea un dígito (0-9)
     if (rx_data >= '0' && rx_data <= '9')
     {
@@ -85,6 +73,5 @@ void Dimmer_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       HAL_UART_Transmit(huart, (uint8_t *)msgBuffer, strlen(msgBuffer), 100);
     }
     // Rehabilita la recepción para el siguiente byte
-    HAL_UART_Receive_IT(huart, &rx_data, 1);
-  }
+    
 }

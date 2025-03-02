@@ -1,13 +1,41 @@
 
 
 # Ignorar específicamente las carpetas y archivos que no queremos rastrear
-Projects/*/*/.vscode/
-Projects/*/*/build/
-Projects/*/*/CMakeFiles/
-Projects/*/*/Startup/
-Projects/*/*/CMakeCache.txt
-Projects/*/*/cmake_install.cmake
-Projects/*/*/build.ninja
-Projects/*/*/main
-Projects/*/*/stm32l476rgtx_FLASH.ld
-Projects/*/*/compile_commands.json
+
+**/build/
+**/CMakeFiles/
+**/Startup/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/build.ninja
+**/main
+**/stm32l476rgtx_FLASH.ld
+**/stm32l476rgtx_flash.ld
+**/compile_commands.json
+
+# Archivos de configuración y respaldo de CubeMX
+**/*.ioc.user
+**/*.ioc.backup
+**/*.mxproject
+**/*.mxconfig
+
+# Archivos de log, temporales y cache
+**/*.log
+**/*.tmp
+**/*.cache
+
+# Directorios de compilación (cualquier carpeta con estos nombres)
+**/Debug/
+**/Release/
+**/build/
+
+# Archivos y carpetas propias de CubeIDE (Eclipse)
+**/.project
+**/.cproject
+**/.settings/
+
+# Archivos temporales de editores y otros
+**/*.swp
+**/*.swo
+**/Thumbs.db
+**/.DS_Store

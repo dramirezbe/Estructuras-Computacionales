@@ -1,5 +1,0 @@
-H:/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/build/Debug/CMakeFiles/cruce-cero.dir
-H:/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/build/Debug/CMakeFiles/edit_cache.dir
-H:/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/build/Debug/CMakeFiles/rebuild_cache.dir
-H:/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/build/Debug/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
-H:/GIT/Estructuras-Computacionales/ProyectoFinal/cruce-cero/build/Debug/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir

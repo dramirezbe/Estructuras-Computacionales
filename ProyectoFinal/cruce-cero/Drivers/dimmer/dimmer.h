@@ -8,7 +8,7 @@ void Dimmer_Init(void);
 
 // Funciones que deben llamarse desde los callbacks HAL
 void Dimmer_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
-void Dimmer_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
-void Dimmer_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+void Dimmer_GPIO_EXTI_Callback(void);
+void Dimmer_UART_RxCpltCallback(UART_HandleTypeDef *huart, uint8_t rx_data);
 
 #endif /* DIMMER_H */

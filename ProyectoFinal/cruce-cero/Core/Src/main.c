@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include "dimmer.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -45,11 +45,6 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-volatile uint32_t i = 0;         // Contador usado en el timer (cada 100 µs)
-volatile uint8_t cruce_cero = 0;   // Flag que se activa al detectar el cruce por cero
-uint32_t dim = 0;                // Valor que controla el disparo del triac (0 a 83)
-
-
 
 /* USER CODE END PV */
 
@@ -65,21 +60,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim->Instance == TIM2)
   {
-    if (cruce_cero)
-    {
-      if (i >= dim)
-      {
-        /* Dispara el triac */
-        HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_SET);
-        i = 0;
-        cruce_cero = 0;
-      }
-      else
-      {
-        i++;
-      }
-    }
+    Dimmer_TIM_PeriodElapsedCallback(htim);
   }
+  
 }
 
 /* Callback de la interrupción externa (EXTI) para el cruce por cero */
@@ -87,35 +70,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if(GPIO_Pin == ZERO_DETECT_Pin)
   {
-    /* Al detectar el rising edge (gracias a la configuración con pull-up):
-       - Se reinicia el contador
-       - Se apaga el triac (se pone en LOW)
-       - Se activa la bandera para iniciar la cuenta en el timer */
-    cruce_cero = 1;
-    i = 0;
-    HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_RESET);
+    Dimmer_GPIO_EXTI_Callback();
   }
 }
 
 uint8_t rx_data;   // Variable para recibir un byte por USART2
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if (huart->Instance == USART2)
+  if(huart->Instance == USART2)
   {
-    // Verifica que el byte recibido sea un dígito (0-9)
-    if (rx_data >= '0' && rx_data <= '9')
-    {
-      uint8_t digit = rx_data - '0';   // Convierte de ASCII a número (0-9)
-      // Inversión y escalado: mapea 0->83 y 9->0
-      dim = 83 - ((digit * 83) / 9);
-      
-      char msgBuffer[50];
-      sprintf(msgBuffer, "Nuevo valor de dim: %lu\r\n", dim);
-      HAL_UART_Transmit(&huart2, (uint8_t *)msgBuffer, strlen(msgBuffer), 100);
-    }
-    // Vuelve a iniciar la recepción para el siguiente byte
-    HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+    // Recibe un byte por USART2
+    Dimmer_UART_RxCpltCallback(huart, rx_data);
+    // Continúa la recepción por interrupción
+    HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data, 1);
   }
+  
 }
 
 /* USER CODE END PFP */
@@ -142,7 +111,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  Dimmer_Init();  // Inicializa las variables internas del módulo
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -163,7 +132,7 @@ int main(void)
   HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data, 1);
 
   /* Enviar mensaje inicial vía USART2 */
-  char *msg = "Ingresa un valor de dim (0 a 83):\r\n";
+  char *msg = "Ingresa un valor de dim (0 a 9):\r\n";
   HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), 100);
   /* USER CODE END 2 */
 
