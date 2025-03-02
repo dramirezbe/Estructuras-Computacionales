@@ -1,151 +1,187 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2025 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-/* Variables globales */
-volatile uint8_t zero_detected = 0; // Bandera que se activa en el cruce por cero
-volatile uint8_t dim = 0;           // Valor de atenuación (0 a 10)
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart2;
 
-#define HALF_CYCLE_US 8333  // Medio ciclo en microsegundos para 60 Hz
+/* USER CODE BEGIN PV */
+volatile uint32_t i = 0;         // Contador usado en el timer (cada 100 µs)
+volatile uint8_t cruce_cero = 0;   // Flag que se activa al detectar el cruce por cero
+uint32_t dim = 0;                // Valor que controla el disparo del triac (0 a 83)
 
-/* Buffer para recepción por USART2 */
-#define RX_BUFFER_SIZE 10
-uint8_t uartRxBuffer[RX_BUFFER_SIZE];
-uint8_t rxIndex = 0;
 
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
+/* USER CODE BEGIN PFP */
 
-/* Prototipos de funciones */
-void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
-void delay_us(uint32_t us);
-int map(int x, int in_min, int in_max, int out_min, int out_max);
-
-
-int main(void)
+/* Callback de la interrupción del timer (cada 100 µs) */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  
-
-  HAL_Init();
-
-  SystemClock_Config();
-
-  MX_GPIO_Init();
-  MX_USART2_UART_Init();
-
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-
-  /* Iniciar la recepción UART en modo interrupción */
-  HAL_UART_Receive_IT(&huart2, &uartRxBuffer[rxIndex], 1);
-
-  HAL_UART_Transmit(&huart2, (uint8_t*)"UART2-init\r\n", 14, 1000);
-
-  uint32_t lastTick = HAL_GetTick(); 
-
-  while (1)
+  if(htim->Instance == TIM2)
   {
-    if (zero_detected)
+    if (cruce_cero)
     {
-      /* Apaga el TRIAC inicialmente (PB1) */
-      HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_RESET);
-
-      if (dim == 0)
+      if (i >= dim)
       {
-        /* Sin retardo: dispara el TRIAC inmediatamente */
+        /* Dispara el triac */
         HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_SET);
+        i = 0;
+        cruce_cero = 0;
       }
       else
       {
-        /* Calcula el retardo (en microsegundos) mapeando el valor recibido */
-        int retardo = map(dim, 1, 10, 100, HALF_CYCLE_US - 100);
-        delay_us(retardo);
-        HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_SET);
+        i++;
       }
-      /* Pulso corto para disparar el TRIAC */
-      delay_us(10);
-      HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_RESET);
-
-      /* Reinicia la bandera de cruce por cero */
-      zero_detected = 0;
-    }
-    /* Envía el valor 'dim' cada 500 ms utilizando HAL_GetTick (basado en SysTick) */
-    if ((HAL_GetTick() - lastTick) >= 500)
-    {
-      lastTick = HAL_GetTick();
-      char dimString[4];  // Para valores entre 0 y 10, 3 dígitos máximo + '\0'
-      sprintf(dimString, "%d", dim);
-      HAL_UART_Transmit(&huart2, (uint8_t*)dimString, strlen(dimString), 1000);
-      HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 1000);  // Envía salto de línea
     }
   }
 }
 
-/* Callback de la interrupción EXTI: se llama al detectar un flanco en PB2 */
+/* Callback de la interrupción externa (EXTI) para el cruce por cero */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if (GPIO_Pin == ZERO_DETECT_Pin)  // PB2 configurado como ZERO_DETECT
+  if(GPIO_Pin == ZERO_DETECT_Pin)
   {
-    zero_detected = 1;
+    /* Al detectar el rising edge (gracias a la configuración con pull-up):
+       - Se reinicia el contador
+       - Se apaga el triac (se pone en LOW)
+       - Se activa la bandera para iniciar la cuenta en el timer */
+    cruce_cero = 1;
+    i = 0;
+    HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_RESET);
   }
 }
 
-/* Callback de recepción UART: procesa el número recibido (0-10) */
+uint8_t rx_data;   // Variable para recibir un byte por USART2
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if(huart->Instance == USART2)
+  if (huart->Instance == USART2)
   {
-    // Transmitir el byte recibido para depuración (echo)
-    HAL_UART_Transmit(&huart2, &uartRxBuffer[rxIndex], 1, 100);
-
-    // Si se detecta fin de mensaje ('\n' o '\r'), procesamos el número
-    if(uartRxBuffer[rxIndex] == '\n' || uartRxBuffer[rxIndex] == '\r')
+    // Verifica que el byte recibido sea un dígito (0-9)
+    if (rx_data >= '0' && rx_data <= '9')
     {
-      uartRxBuffer[rxIndex] = '\0'; // Finaliza la cadena
-      int valor = atoi((char*)uartRxBuffer);
-      if(valor >= 0 && valor <= 10)
-      {
-        dim = (uint8_t)valor;
-      }
-      rxIndex = 0; // Reinicia el índice para la próxima recepción
+      uint8_t digit = rx_data - '0';   // Convierte de ASCII a número (0-9)
+      // Inversión y escalado: mapea 0->83 y 9->0
+      dim = 83 - ((digit * 83) / 9);
+      
+      char msgBuffer[50];
+      sprintf(msgBuffer, "Nuevo valor de dim: %lu\r\n", dim);
+      HAL_UART_Transmit(&huart2, (uint8_t *)msgBuffer, strlen(msgBuffer), 100);
     }
-    else
-    {
-      rxIndex++;
-      if(rxIndex >= RX_BUFFER_SIZE)
-      {
-        rxIndex = 0; // Reinicia en caso de desbordamiento del buffer
-      }
-    }
-    // Reinicia la recepción de un byte
-    HAL_UART_Receive_IT(&huart2, &uartRxBuffer[rxIndex], 1);
+    // Vuelve a iniciar la recepción para el siguiente byte
+    HAL_UART_Receive_IT(&huart2, &rx_data, 1);
   }
 }
 
+/* USER CODE END PFP */
 
-/* Función para generar un retardo en microsegundos utilizando el contador DWT */
-void delay_us(uint32_t us)
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
 {
-  uint32_t startTick = DWT->CYCCNT;
-  uint32_t ticks = us * (SystemCoreClock / 1000000);
-  while((DWT->CYCCNT - startTick) < ticks);
+
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART2_UART_Init();
+  MX_TIM2_Init();
+  /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start_IT(&htim2);
+
+  /* Inicia la recepción en USART2 por interrupción (1 byte) */
+  HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data, 1);
+
+  /* Enviar mensaje inicial vía USART2 */
+  char *msg = "Ingresa un valor de dim (0 a 83):\r\n";
+  HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), 100);
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
 }
 
-/* Función para mapear un valor de un rango a otro */
-int map(int x, int in_min, int in_max, int out_min, int out_max)
-{
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-
-
-
-
-
-
-
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -189,6 +225,51 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 79;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 99;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
 }
 
 /**
@@ -244,29 +325,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : TRIAC_PULSE_Pin */
   GPIO_InitStruct.Pin = TRIAC_PULSE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(TRIAC_PULSE_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ZERO_DETECT_Pin */
@@ -278,9 +343,6 @@ static void MX_GPIO_Init(void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
