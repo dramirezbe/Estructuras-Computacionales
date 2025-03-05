@@ -19,7 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Set the project name
-set(CMAKE_PROJECT_NAME Plantilla-final)
+set(CMAKE_PROJECT_NAME cpu)
 
 # Include toolchain file
 include("cmake/gcc-arm-none-eabi.cmake")
@@ -48,23 +48,22 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
-    External/ssd1306/ssd1306.c
-    External/ssd1306/ssd1306_fonts.c
-    External/ssd1306/ssd1306.h
-    External/ssd1306/ssd1306_fonts.h
-
+    Drivers/dimmer/dimmer.c
+    Drivers/DHT11/DHT11.c
+    Drivers/esp_wifi_handler/esp_wifi_handler.c
     Drivers/keypad/keypad.c
-
+    Drivers/ssd1306/ssd1306.c
     Core/Src/ring_buffer.c
-    Core/Src/state_machine.c
-    Core/Src/cristian.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
-    External/ssd1306
+    Drivers/dimmer
+    Drivers/DHT11
+    Drivers/esp_wifi_handler
     Drivers/keypad
+    Drivers/ssd1306
 )
 
 # Add project symbols (macros)

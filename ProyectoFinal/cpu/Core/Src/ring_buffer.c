@@ -8,9 +8,7 @@
  * Suitable for embedded systems using STM32 HAL.
  */
 
-
-# include "ring_buffer.h"
-
+#include "ring_buffer.h"
 
 /**
  * @brief Initialize ring buffer structure
@@ -109,24 +107,4 @@ uint8_t ring_buffer_read(ring_buffer_t *rb, uint8_t *byte) {
     rb->tail = (rb->tail + 1) % rb->capacity;
     rb->is_full = 0;
     return 1;
-}
-
-/**
- * @brief Muestra los elementos actuales del ring buffer por UART.
- * @param rb        Puntero a la instancia del ring buffer.
- * @param huart     Puntero al manejador de UART para la transmisión.
- */
-void show_rb(ring_buffer_t *rb, UART_HandleTypeDef *huart) {
-    uint8_t size = ring_buffer_size(rb); // Obtener el número de elementos en el buffer
-
-    // Transmitir los elementos por UART
-    HAL_UART_Transmit(huart, (uint8_t *)"rb:", 3, 1000); // Encabezado
-
-    // Mostrar los elementos del ring buffer
-    for (uint8_t i = 0; i < size; i++) {
-        uint8_t index = (rb->tail + i) % rb->capacity; // Calcular el índice circular
-        HAL_UART_Transmit(huart, &rb->buffer[index], 1, 1000); // Transmitir cada byte
-    }
-
-    HAL_UART_Transmit(huart, (uint8_t *)"\r\n", 2, 1000); // Nueva línea
 }

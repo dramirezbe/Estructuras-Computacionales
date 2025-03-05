@@ -53,7 +53,6 @@ ring_buffer_t rb;
 uint8_t buffer_memory[BUFFER_CAPACITY];
 uint8_t destination_array[BUFFER_CAPACITY];
 
-uint8_t rb_array;
 
 /* USER CODE END PV */
 

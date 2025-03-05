@@ -19,13 +19,17 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#include "keypad.h"
-#include "ssd1306.h"
-#include "ssd1306_fonts.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "ring_buffer.h"
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
+#include "keypad.h"
+#include "esp_wifi_handler.h"
+#include "DHT11.h"
+#include "dimmer.h"
 
+/* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
@@ -45,63 +49,48 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
+TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-ring_buffer_t rb;
-uint8_t buffer_memory[BUFFER_CAPACITY];
 
-uint8_t door_status = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_I2C1_Init(void);
+static void MX_TIM1_Init(void);
+static void MX_TIM2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-uint8_t rx_data;
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    // Verificamos que la interrupción provenga de USART2
-    if (huart->Instance == USART2)
-    {
-      ring_buffer_write(&rb, rx_data);
-      show_rb(&rb, &huart2);
-      //HAL_UART_Transmit(&huart2, (uint8_t *)&key, 1, 1000);   
-      
-      // Reiniciar la recepción para seguir recibiendo datos
-      HAL_UART_Receive_IT(&huart2, &rx_data, 1);
-    }
-    if (huart->Instance == USART3) {
-      HAL_UART_Transmit(&huart3, (uint8_t *)"[esp-wifi]:", 11, 1000);
-      HAL_UART_Transmit(&huart3, &rx_data, 1, 1000);
-      HAL_UART_Transmit(&huart3, (uint8_t *)"\r\n", 2, 1000);
-
-      ring_buffer_write(&rb, rx_data);
-      show_rb(&rb, &huart3);
-
-      HAL_UART_Receive_IT(&huart3, &rx_data, 1);
-    }
-}
-
-void heartbeat(void)
-{
-  static uint32_t last_heartbeat = 0;
-  if (HAL_GetTick() - last_heartbeat > 1000)
-  {
-    last_heartbeat = HAL_GetTick();
-    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+uint8_t rx_data2;
+uint8_t rx_data3;
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+  if (huart->Instance == USART2) {
+    HAL_UART_Transmit(&huart2, (uint8_t *)"UART2:", 6, 1000);
+    HAL_UART_Transmit(&huart2, (uint8_t *)&rx_data2, 1, 1000);
+    HAL_UART_Transmit(&huart2, (uint8_t *)"\n\r", 4, 1000);
+    HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data2, 1);
   }
+  if (huart->Instance == USART3) {
+    HAL_UART_Transmit(&huart3, (uint8_t *)&rx_data3, 1, 1000);
+    HAL_UART_Transmit(&huart2, (uint8_t *)&rx_data3, 1, 1000);
+    HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_data3, 1);
+  }
+
 }
+
+
 
 /* USER CODE END 0 */
 
@@ -114,6 +103,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
+  
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -122,7 +112,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  keypad_init();
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -134,33 +124,43 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C1_Init();
+  MX_TIM1_Init();
+  MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Transmit(&huart2, (uint8_t *)"Hello, stm32\r\n", 14, HAL_MAX_DELAY);
-  HAL_UART_Transmit(&huart3, (uint8_t *)"Hello, esp-wifi\r\n", 17, HAL_MAX_DELAY);
-  HAL_UART_Receive_IT(&huart3, &rx_data, 1);
-  HAL_UART_Receive_IT(&huart2, &rx_data, 1);
-  ring_buffer_init(&rb, buffer_memory, BUFFER_CAPACITY);
+  HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data2, 1);
+  HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_data3, 1);
 
+  char *msg_uart2 = "---Hello USART2---\r\n";
+  HAL_UART_Transmit(&huart2, (uint8_t *)msg_uart2, strlen(msg_uart2), 1000);
+  char *msg_uart3 = "---Hello USART3---\r\n";
+  HAL_UART_Transmit(&huart3, (uint8_t *)msg_uart3, strlen(msg_uart3), 1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  static uint32_t heartbeat_tick = 0;
   while (1)
   {
-    uint8_t key = keypad_get_pressed_key();
-    if (key) {
-      ring_buffer_write(&rb, key);
-      show_rb(&rb, &huart2);
+
+
+    if (HAL_GetTick() - heartbeat_tick >= 10000) {
+      heartbeat_tick = HAL_GetTick();
+      HAL_UART_Transmit(&huart2, (uint8_t *)"UART2 loop", 10, 1000);
+      HAL_UART_Transmit(&huart2, (uint8_t *)"\n\r", 4, 1000);
+
+      HAL_UART_Transmit(&huart3, (uint8_t *)"UART3 loop", 10, 1000);
+      HAL_UART_Transmit(&huart3, (uint8_t *)"\n\r", 4, 1000);
     }
-  }
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-}
+  }
   /* USER CODE END 3 */
+}
 
 /**
   * @brief System Clock Configuration
@@ -187,7 +187,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 1;
-  RCC_OscInitStruct.PLL.PLLN = 10;
+  RCC_OscInitStruct.PLL.PLLN = 9;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
@@ -202,7 +202,7 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
@@ -227,7 +227,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x10D19CE4;
+  hi2c1.Init.Timing = 0x00C08CCB;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -256,6 +256,98 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM1_Init(void)
+{
+
+  /* USER CODE BEGIN TIM1_Init 0 */
+
+  /* USER CODE END TIM1_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 71;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 65535;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM1_Init 2 */
+
+  /* USER CODE END TIM1_Init 2 */
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 71;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 99;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
 
 }
 
@@ -347,23 +439,37 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DOOR_STATUS_Pin|LD2_Pin|ROW_1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DOOR_Pin|HEARTBIT_Pin|ROW_1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ROW_2_Pin|ROW_4_Pin|ROW_3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, TRIAC_PULSE_Pin|ROW_2_Pin|ROW_4_Pin|ROW_3_Pin
+                          |DHT11_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
+  /*Configure GPIO pin : BUTTON_Pin */
+  GPIO_InitStruct.Pin = BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DOOR_STATUS_Pin LD2_Pin */
-  GPIO_InitStruct.Pin = DOOR_STATUS_Pin|LD2_Pin;
+  /*Configure GPIO pins : DOOR_Pin HEARTBIT_Pin */
+  GPIO_InitStruct.Pin = DOOR_Pin|HEARTBIT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : TRIAC_PULSE_Pin */
+  GPIO_InitStruct.Pin = TRIAC_PULSE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  HAL_GPIO_Init(TRIAC_PULSE_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : ZERO_DETECT_Pin */
+  GPIO_InitStruct.Pin = ZERO_DETECT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(ZERO_DETECT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : COLUMN_1_Pin */
   GPIO_InitStruct.Pin = COLUMN_1_Pin;
@@ -377,8 +483,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(COLUMN_4_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : COLUMN_2_Pin COLUMN_3_Pin */
-  GPIO_InitStruct.Pin = COLUMN_2_Pin|COLUMN_3_Pin;
+  /*Configure GPIO pins : COLUMN_3_Pin COLUMN_2_Pin */
+  GPIO_InitStruct.Pin = COLUMN_3_Pin|COLUMN_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -397,7 +503,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : DHT11_Pin */
+  GPIO_InitStruct.Pin = DHT11_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(DHT11_GPIO_Port, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 

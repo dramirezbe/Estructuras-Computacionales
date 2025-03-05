@@ -31,13 +31,13 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
-#include "ring_buffer.h"
-
-#include <string.h>
 #include <stdio.h>
-#include <stdint.h>
-/* USER CODE END Includes */
+#include <string.h>
+#include <stdlib.h>
+#include <_ansi.h>
+#include <stdlib.h>
+#include <stddef.h>
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -63,29 +63,34 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define B1_Pin GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
-#define B1_EXTI_IRQn EXTI15_10_IRQn
-#define USART2_TX_Pin GPIO_PIN_2
-#define USART2_TX_GPIO_Port GPIOA
-#define USART2_RX_Pin GPIO_PIN_3
-#define USART2_RX_GPIO_Port GPIOA
-#define DOOR_STATUS_Pin GPIO_PIN_4
-#define DOOR_STATUS_GPIO_Port GPIOA
-#define LD2_Pin GPIO_PIN_5
-#define LD2_GPIO_Port GPIOA
+#define BUTTON_Pin GPIO_PIN_13
+#define BUTTON_GPIO_Port GPIOC
+#define BUTTON_EXTI_IRQn EXTI15_10_IRQn
+#define USART_TX_Pin GPIO_PIN_2
+#define USART_TX_GPIO_Port GPIOA
+#define USART_RX_Pin GPIO_PIN_3
+#define USART_RX_GPIO_Port GPIOA
+#define DOOR_Pin GPIO_PIN_4
+#define DOOR_GPIO_Port GPIOA
+#define HEARTBIT_Pin GPIO_PIN_5
+#define HEARTBIT_GPIO_Port GPIOA
+#define TRIAC_PULSE_Pin GPIO_PIN_1
+#define TRIAC_PULSE_GPIO_Port GPIOB
+#define ZERO_DETECT_Pin GPIO_PIN_2
+#define ZERO_DETECT_GPIO_Port GPIOB
+#define ZERO_DETECT_EXTI_IRQn EXTI2_IRQn
 #define COLUMN_1_Pin GPIO_PIN_10
 #define COLUMN_1_GPIO_Port GPIOB
 #define COLUMN_1_EXTI_IRQn EXTI15_10_IRQn
 #define COLUMN_4_Pin GPIO_PIN_7
 #define COLUMN_4_GPIO_Port GPIOC
 #define COLUMN_4_EXTI_IRQn EXTI9_5_IRQn
-#define COLUMN_2_Pin GPIO_PIN_8
-#define COLUMN_2_GPIO_Port GPIOA
-#define COLUMN_2_EXTI_IRQn EXTI9_5_IRQn
-#define COLUMN_3_Pin GPIO_PIN_9
+#define COLUMN_3_Pin GPIO_PIN_8
 #define COLUMN_3_GPIO_Port GPIOA
 #define COLUMN_3_EXTI_IRQn EXTI9_5_IRQn
+#define COLUMN_2_Pin GPIO_PIN_9
+#define COLUMN_2_GPIO_Port GPIOA
+#define COLUMN_2_EXTI_IRQn EXTI9_5_IRQn
 #define ROW_1_Pin GPIO_PIN_10
 #define ROW_1_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
@@ -98,13 +103,12 @@ void Error_Handler(void);
 #define ROW_4_GPIO_Port GPIOB
 #define ROW_3_Pin GPIO_PIN_5
 #define ROW_3_GPIO_Port GPIOB
+#define DHT11_Pin GPIO_PIN_6
+#define DHT11_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define BUFFER_CAPACITY 32
-
-#define PASSWORD "2806"
-
-extern uint8_t door_status;
+#define RX_WIFI_BUFFER_SIZE 16
+#define TX_WIFI_BUFFER_SIZE 2
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

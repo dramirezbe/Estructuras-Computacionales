@@ -1,17 +1,9 @@
-#ifndef __KEYPAD_H__
-#define __KEYPAD_H__
+#ifndef __KEYPAD_H
+#define __KEYPAD_H
 
-#include "main.h"
-
-#define ROWS 4
-#define COLS 4
-
-// Mapa de teclado mejorado con comentarios
-extern const uint8_t keypad_map[ROWS][COLS];
+#include <stdint.h>
 
 void keypad_init(void);
 uint8_t keypad_scan(uint16_t GPIO_Pin);
 
-uint8_t keypad_get_pressed_key();
-
-#endif
+#endif // __KEYPAD_H

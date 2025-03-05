@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.py": "python",
+        "ssd1306.h": "c",
+        "main.h": "c",
+        "string.h": "c"
+    }
+}
