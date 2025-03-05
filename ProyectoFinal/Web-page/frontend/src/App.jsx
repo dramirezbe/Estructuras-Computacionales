@@ -12,13 +12,12 @@ const socket = io('http://localhost:5000', {
   reconnectionDelay: 5000,
 });
 
-let temp = 15;
-let hum = 40;
-
 function App() {
   const [sliderValue, setSliderValue] = useState(5);
   const [serverLogs, setServerLogs] = useState([]);  // Estado como array
   const [doorState, setDoorState] = useState(1);  // Estado
+  const [temp, setTemp] = useState(20);
+  const [hum, setHum] = useState(50);
 
   const handleSliderChange = useCallback((e) => {
     const value = parseInt(e.target.value);
@@ -37,8 +36,14 @@ function App() {
       });
     });
 
+    socket.on('sensorData', (data) => {
+      setTemp(data.temp);
+      setHum(data.hum);
+    });
+  
     return () => {
       socket.off('serverLog');
+      socket.off('sensorData');
     };
   }, []);
 

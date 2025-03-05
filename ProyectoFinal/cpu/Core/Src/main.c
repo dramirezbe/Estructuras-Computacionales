@@ -73,14 +73,17 @@ static void MX_I2C1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+
+
 uint8_t rx_data2;
 uint8_t rx_data3;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart->Instance == USART2) {
-    HAL_UART_Transmit(&huart2, (uint8_t *)"UART2:", 6, 1000);
-    HAL_UART_Transmit(&huart2, (uint8_t *)&rx_data2, 1, 1000);
-    HAL_UART_Transmit(&huart2, (uint8_t *)"\n\r", 4, 1000);
-    HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data2, 1);
+    //HAL_UART_Transmit(&huart2, (uint8_t *)"UART2:", 6, 1000);
+    //HAL_UART_Transmit(&huart2, (uint8_t *)&rx_data2, 1, 1000);
+    //HAL_UART_Transmit(&huart2, (uint8_t *)"\n\r", 4, 1000);
+    //HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data2, 1);
   }
   if (huart->Instance == USART3) {
     HAL_UART_Transmit(&huart3, (uint8_t *)&rx_data3, 1, 1000);
@@ -130,6 +133,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start_IT(&htim1);
   HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data2, 1);
   HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_data3, 1);
 
@@ -141,18 +145,18 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  static uint32_t heartbeat_tick = 0;
+
+  static uint32_t dht_tick = 0;
   while (1)
   {
 
-
-    if (HAL_GetTick() - heartbeat_tick >= 10000) {
-      heartbeat_tick = HAL_GetTick();
-      HAL_UART_Transmit(&huart2, (uint8_t *)"UART2 loop", 10, 1000);
-      HAL_UART_Transmit(&huart2, (uint8_t *)"\n\r", 4, 1000);
-
-      HAL_UART_Transmit(&huart3, (uint8_t *)"UART3 loop", 10, 1000);
-      HAL_UART_Transmit(&huart3, (uint8_t *)"\n\r", 4, 1000);
+    if (HAL_GetTick() >= 10000)
+    {
+        if (HAL_GetTick() - dht_tick >= 5000)
+        {
+            dht_tick = HAL_GetTick();
+            DHT11_send_data(&huart3);
+        }
     }
     
     /* USER CODE END WHILE */

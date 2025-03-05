@@ -100,3 +100,23 @@ uint8_t DHT11_ReadData(DHT11_Data *data)
   }
   return 0; // Error en la lectura
 }
+
+void DHT11_send_data(UART_HandleTypeDef *huart)
+{
+    char dht11_data[20];
+    DHT11_Data dhtData;
+    
+    if (DHT11_ReadData(&dhtData))
+    {
+        // Enviar datos en formato: |tempC|humedad|
+        sprintf(dht11_data, "|%d.%d|%d.%d|\r\n", 
+                dhtData.temp_int, dhtData.temp_dec, 
+                dhtData.humidity_int, dhtData.humidity_dec);
+        HAL_UART_Transmit(huart, (uint8_t *)dht11_data, strlen(dht11_data), 1000);
+    }
+    else
+    {
+        sprintf(dht11_data, "Error\r\n");
+        HAL_UART_Transmit(huart, (uint8_t *)dht11_data, strlen(dht11_data), 1000);
+    }
+}

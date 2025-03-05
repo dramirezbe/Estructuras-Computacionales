@@ -15,5 +15,6 @@ typedef struct {
 uint8_t DHT11_Start(void);
 uint8_t DHT11_ReadByte(void);
 uint8_t DHT11_ReadData(DHT11_Data *data);
+void DHT11_send_data(UART_HandleTypeDef *huart);
 
 #endif // DHT11_H

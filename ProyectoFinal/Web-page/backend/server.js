@@ -50,7 +50,20 @@ const connectToESP = () => {
   });
 
   telnetClient.on('data', (data) => {
-    broadcastLog(`[ESP-RX] ${data.toString().trim()}`);
+    
+    const text = data.toString().trim();
+    broadcastLog(`[ESP-RX] ${text}`);
+
+    // Buscar el patrón |temp|hum| usando una expresión regular.
+    const sensorRegex = /\|(\d+\.\d+)\|(\d+\.\d+)\|/;
+    const matches = sensorRegex.exec(text);
+
+    if (matches && matches.length >= 3) {
+      const temp = parseFloat(matches[1]);
+      const hum = parseFloat(matches[2]);
+      // Emitir los datos del sensor a la aplicación React.
+      io.emit('sensorData', { temp, hum });
+    }
   });
 
   telnetClient.on('error', (err) => {
