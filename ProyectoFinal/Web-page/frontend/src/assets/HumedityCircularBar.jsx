@@ -4,14 +4,14 @@ import { PieChart, Pie, Cell } from 'recharts';
 
 const RADIAN = Math.PI / 180;
 
-const midTemp = 30;
-const maxTemp = 50;
-const coldTemp = 15;
+const midHum = 66;
+const maxHum = 100;
+const coldHum = 33;
 
 const data = [
-  { name: 'A', value: coldTemp, color: '#0000ff' },
-  { name: 'B', value: midTemp - coldTemp, color: '#00ff00' },
-  { name: 'C', value: maxTemp - midTemp, color: '#ff0000' },
+  { name: 'A', value: coldHum, color: '#0000ff' },
+  { name: 'B', value: midHum - coldHum, color: '#00ff00' },
+  { name: 'C', value: maxHum - midHum, color: '#ff0000' },
 ];
 const cx = 150;
 const cy = 200;
