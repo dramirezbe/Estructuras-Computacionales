@@ -9,6 +9,7 @@
 #define INC_RING_BUFFER_H_
 
 #include <stdint.h>
+#include "main.h"
 
 typedef struct ring_buffer_ {
     uint8_t *buffer;
@@ -27,5 +28,9 @@ uint8_t ring_buffer_is_empty(ring_buffer_t *rb);
 
 void ring_buffer_write(ring_buffer_t *rb, uint8_t data);
 uint8_t ring_buffer_read(ring_buffer_t *rb, uint8_t *byte);
+
+void show_rb(ring_buffer_t *rb, UART_HandleTypeDef *huart);
+
+uint8_t check_string_in_rb(const char *str, ring_buffer_t *rb);
 
 #endif /* INC_RING_BUFFER_H_ */

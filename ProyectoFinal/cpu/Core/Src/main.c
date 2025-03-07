@@ -25,7 +25,6 @@
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
 #include "keypad.h"
-#include "esp_wifi_handler.h"
 #include "DHT11.h"
 #include "dimmer.h"
 
@@ -56,6 +55,18 @@ UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
+volatile uint8_t press_count = 0;         // Contador de pulsaciones
+volatile uint32_t first_press_time = 0;     // Tiempo de la primera pulsación
+
+uint32_t door_tick = 0;
+uint32_t door_status = 0;
+uint8_t door_prev_status = 0;               // Guarda el estado previo para la lógica del botón
+
+uint8_t pc_rx_data[BUFFER_CAPACITY];
+ring_buffer_t pc_rx_buffer;
+
+uint8_t keypad_rx_data[BUFFER_CAPACITY];
+ring_buffer_t keypad_rx_buffer;
 
 /* USER CODE END PV */
 
@@ -68,33 +79,189 @@ static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-
+void OLED_Write(char *text);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
-
-uint8_t rx_data2;
-uint8_t rx_data3;
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-  if (huart->Instance == USART2) {
-    //HAL_UART_Transmit(&huart2, (uint8_t *)"UART2:", 6, 1000);
-    //HAL_UART_Transmit(&huart2, (uint8_t *)&rx_data2, 1, 1000);
-    //HAL_UART_Transmit(&huart2, (uint8_t *)"\n\r", 4, 1000);
-    //HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data2, 1);
+/*-----------------------------------INTERRUPTIONS---------------------------------*/
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance == TIM2)
+  {
+    Dimmer_TIM_PeriodElapsedCallback(htim);
   }
-  if (huart->Instance == USART3) {
-    HAL_UART_Transmit(&huart3, (uint8_t *)&rx_data3, 1, 1000);
-    HAL_UART_Transmit(&huart2, (uint8_t *)&rx_data3, 1, 1000);
-    HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_data3, 1);
-  }
-
+  
 }
 
+/* Callback de la interrupción externa (EXTI) para el cruce por cero */
+uint32_t key_pressed_tick = 0;
+uint16_t column_pressed = 0;
+uint32_t debounce_tick = 0;
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin == ZERO_DETECT_Pin)
+  {
+    Dimmer_GPIO_EXTI_Callback();
+  }
+  uint32_t current_time = HAL_GetTick();
 
+  if (GPIO_Pin == BUTTON_Pin)
+  {
+      // Debounce para B1: 100 ms
+      static uint32_t b1_debounce_tick = 0;
+      if ((current_time - b1_debounce_tick) < 100)
+          return;
+      b1_debounce_tick = current_time;
+      
+      // Procesamiento del botón B1
+      if (press_count == 0)
+      {
+          first_press_time = current_time;
+      }
+      press_count++;
+  }
+  
+  if(GPIO_Pin == COLUMN_1_Pin || GPIO_Pin == COLUMN_2_Pin || GPIO_Pin == COLUMN_3_Pin || GPIO_Pin == COLUMN_4_Pin) {
+  
+    // Debounce para el keypad: 200 ms
+    static uint32_t keypad_debounce_tick = 0;
+    if ((current_time - keypad_debounce_tick) < 200)
+        return;
+    keypad_debounce_tick = current_time;
+    
+    key_pressed_tick = current_time;
+    column_pressed = GPIO_Pin;
+  }
+}
 
+uint8_t rx_data;
+uint8_t wifi_data;
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+  if (huart->Instance == USART2) {
+    ring_buffer_write(&pc_rx_buffer, rx_data);
+    show_rb(&pc_rx_buffer, &huart2);
+    HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+  }
+  else if (huart->Instance == USART3) {
+    Dimmer_UART_RxCpltCallback(huart, wifi_data);
+    
+    HAL_UART_Transmit(&huart3, (uint8_t *)&wifi_data, 1, 1000);
+    HAL_UART_Receive_IT(&huart3, (uint8_t *)&wifi_data, 1);
+    //HAL_UART_Receive_IT(&huart2, (uint8_t *)&wifi_data, 1);
+  }
+}
+
+/*------------------------------------MACROS------------------------------------*/
+
+uint32_t heartbit_tick = 0;
+void heartbit(void) {
+  if (HAL_GetTick() - heartbit_tick >= 500) {
+      HAL_GPIO_TogglePin(HEARTBIT_GPIO_Port, HEARTBIT_Pin);
+      ssd1306_UpdateScreen();
+      
+      heartbit_tick = HAL_GetTick();
+  }
+}
+void OLED_Write(char *text) {
+  ssd1306_Fill(Black);
+  ssd1306_SetCursor(17, 17);
+  ssd1306_WriteString(text, Font_11x18, White);
+}
+
+/*-------------------------------------------------------FUNCTIONS----------------------------------*/
+
+/**
+ * @brief Máquina de estados para el control de la puerta.
+ * Se guarda en door_prev_status el estado previo.
+ * 0 = cerrado, 1 = abierto, 2 = abierto temp, 3 = inactivo
+ */
+void state_machine(void) {
+  switch (door_status) {
+    case 0: // Cerrado
+      door_prev_status = 0;
+      HAL_GPIO_WritePin(DOOR_GPIO_Port, DOOR_Pin, GPIO_PIN_RESET);
+      HAL_UART_Transmit(&huart2, (uint8_t *)"Closed", 7, 1000);
+      HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", 2, 1000);
+      OLED_Write("Closed");
+      door_status = 3;
+      break;
+    case 1: // Abierto
+      door_prev_status = 1;
+      HAL_GPIO_WritePin(DOOR_GPIO_Port, DOOR_Pin, GPIO_PIN_SET);
+      HAL_UART_Transmit(&huart2, (uint8_t *)"Open", 4, 1000);
+      HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", 2, 1000);
+      OLED_Write("Open");
+      door_status = 3;
+      break;
+    case 2: // Abierto temporal
+      door_prev_status = 2;
+      HAL_GPIO_WritePin(DOOR_GPIO_Port, DOOR_Pin, GPIO_PIN_SET);
+      if (door_tick == 0) {
+        door_tick = HAL_GetTick();
+        HAL_UART_Transmit(&huart2, (uint8_t *)"Open", 4, 1000);
+        HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", 2, 1000);
+        OLED_Write("Open");
+      }
+      // Después de 5 segundos se cierra la puerta
+      if (HAL_GetTick() - door_tick >= 5000) {
+        HAL_GPIO_WritePin(DOOR_GPIO_Port, DOOR_Pin, GPIO_PIN_RESET);
+        HAL_UART_Transmit(&huart2, (uint8_t *)"Closed", 7, 1000);
+        HAL_UART_Transmit(&huart2, (uint8_t *)"\r\n", 2, 1000);
+        OLED_Write("Closed");
+        door_status = 3;
+        door_tick = 0;
+      }
+      break;
+    case 3: // Inactivo
+      // No se realiza ninguna acción.
+      break;
+    default:
+      break;
+  }
+  wifi_data = 14;
+}
+
+void handle_door_status(void) {
+  if(check_string_in_rb(PASSWORD, &pc_rx_buffer) ||
+    check_string_in_rb(PASSWORD, &keypad_rx_buffer) ||
+    wifi_data == 12) {
+    door_status = 2;
+  }
+  if(check_string_in_rb(OPEN_COMMAND, &pc_rx_buffer) ||
+    check_string_in_rb(OPEN_COMMAND, &keypad_rx_buffer) ||
+    wifi_data == 11) {
+    door_status = 1;
+  }
+  if(check_string_in_rb(CLOSE_COMMAND, &pc_rx_buffer) ||
+    check_string_in_rb(CLOSE_COMMAND, &keypad_rx_buffer) ||
+    wifi_data == 10) {
+    door_status = 0;
+  }
+
+  // Manejo de pulsaciones del botón usando EXTI y GetTick (sin delay)
+  if (press_count > 0)
+  {
+    if (HAL_GetTick() - first_press_time > 500)
+    {
+      if (press_count == 2)
+      {
+        door_status = 1;  // Doble pulsación: se abre la puerta (estado 1)
+      }
+      else if (press_count == 1)
+      {
+        // Pulsación única: si la puerta estaba previamente abierta (door_prev_status == 1) se cierra,
+        // en caso contrario entra en modo "abierto temp" (estado 2)
+        door_status = (door_prev_status == 1) ? 0 : 2;
+      }
+      press_count = 0; // Reinicia el contador para la siguiente serie
+    }
+  }
+
+    
+
+}
 /* USER CODE END 0 */
 
 /**
@@ -115,7 +282,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  keypad_init();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -134,13 +301,25 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim1);
-  HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data2, 1);
-  HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_data3, 1);
+  HAL_TIM_Base_Start_IT(&htim2);
+
+  HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_data, 1);
+  HAL_UART_Receive_IT(&huart3, (uint8_t *)&wifi_data, 1);
 
   char *msg_uart2 = "---Hello USART2---\r\n";
   HAL_UART_Transmit(&huart2, (uint8_t *)msg_uart2, strlen(msg_uart2), 1000);
   char *msg_uart3 = "---Hello USART3---\r\n";
   HAL_UART_Transmit(&huart3, (uint8_t *)msg_uart3, strlen(msg_uart3), 1000);
+
+  ring_buffer_init(&pc_rx_buffer, pc_rx_data, sizeof(pc_rx_data));
+  ring_buffer_init(&keypad_rx_buffer, keypad_rx_data, sizeof(keypad_rx_data));
+
+  ssd1306_Init();
+  OLED_Write(FW_VERSION);
+
+  HAL_UART_Transmit(&huart2, (uint8_t *)FW_VERSION, strlen(FW_VERSION), 1000);
+  HAL_UART_Transmit(&huart3, (uint8_t *)FW_VERSION, strlen(FW_VERSION), 1000);
+  HAL_UART_Transmit(&huart2, (uint8_t *)"\n\r", 4, 1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -149,6 +328,7 @@ int main(void)
   static uint32_t dht_tick = 0;
   while (1)
   {
+    heartbit();
 
     if (HAL_GetTick() >= 10000)
     {
@@ -158,14 +338,28 @@ int main(void)
             DHT11_send_data(&huart3);
         }
     }
+    if (column_pressed != 0 && (key_pressed_tick + 5) < HAL_GetTick() ) {
+      uint8_t key = keypad_scan(column_pressed);
+
+      ring_buffer_write(&keypad_rx_buffer, key);
+      //HAL_UART_Transmit(&huart2, (uint8_t *)&key, 1, 1000);
+      show_rb(&keypad_rx_buffer, &huart2);
+      HAL_UART_Receive_IT(&huart2, &rx_data, 1);
+
+      column_pressed = 0;
+    }
+
+    handle_door_status();
+    
+    state_machine();
+    
     
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
   /* USER CODE END 3 */
+  }
 }
-
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -487,8 +681,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(COLUMN_4_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : COLUMN_3_Pin COLUMN_2_Pin */
-  GPIO_InitStruct.Pin = COLUMN_3_Pin|COLUMN_2_Pin;
+  /*Configure GPIO pins : COLUMN_2_Pin COLUMN_3_Pin */
+  GPIO_InitStruct.Pin = COLUMN_2_Pin|COLUMN_3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);

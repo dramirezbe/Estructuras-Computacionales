@@ -38,7 +38,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Configuración Telnet
-const espIp = '192.168.50.115';
+const espIp = '192.168.157.115';
 const espPort = 23;
 let telnetClient = null;
 

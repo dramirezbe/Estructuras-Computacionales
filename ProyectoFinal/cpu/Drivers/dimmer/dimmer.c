@@ -24,18 +24,18 @@ void Dimmer_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim->Instance == TIM2)
   {
-      if (i >= dim)
-      {
-        // Dispara el triac (configurado en un pin de salida)
-        HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_SET);
-        i = 0;
-        cruce_cero = 0;
-      }
-      else
-      {
-        i++;
-      }
+    if (i >= dim)
+    {
+      // Dispara el triac (configurado en un pin de salida)
+      HAL_GPIO_WritePin(TRIAC_PULSE_GPIO_Port, TRIAC_PULSE_Pin, GPIO_PIN_SET);
+      i = 0;
+      cruce_cero = 0;
     }
+    else
+    {
+      i++;
+    }
+  }
 }
 
 /**
@@ -75,3 +75,5 @@ void Dimmer_UART_RxCpltCallback(UART_HandleTypeDef *huart, uint8_t rx_data)
     // Rehabilita la recepción para el siguiente byte
     
 }
+
+

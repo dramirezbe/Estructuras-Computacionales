@@ -4,6 +4,7 @@
         "ssd1306.h": "c",
         "main.h": "c",
         "string.h": "c",
-        "dht11.h": "c"
+        "dht11.h": "c",
+        "keypad.h": "c"
     }
 }

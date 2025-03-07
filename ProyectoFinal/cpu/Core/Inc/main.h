@@ -31,13 +31,12 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <_ansi.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <stddef.h>
-
+#include <_ansi.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -85,12 +84,12 @@ void Error_Handler(void);
 #define COLUMN_4_Pin GPIO_PIN_7
 #define COLUMN_4_GPIO_Port GPIOC
 #define COLUMN_4_EXTI_IRQn EXTI9_5_IRQn
-#define COLUMN_3_Pin GPIO_PIN_8
-#define COLUMN_3_GPIO_Port GPIOA
-#define COLUMN_3_EXTI_IRQn EXTI9_5_IRQn
-#define COLUMN_2_Pin GPIO_PIN_9
+#define COLUMN_2_Pin GPIO_PIN_8
 #define COLUMN_2_GPIO_Port GPIOA
 #define COLUMN_2_EXTI_IRQn EXTI9_5_IRQn
+#define COLUMN_3_Pin GPIO_PIN_9
+#define COLUMN_3_GPIO_Port GPIOA
+#define COLUMN_3_EXTI_IRQn EXTI9_5_IRQn
 #define ROW_1_Pin GPIO_PIN_10
 #define ROW_1_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
@@ -107,8 +106,12 @@ void Error_Handler(void);
 #define DHT11_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define RX_WIFI_BUFFER_SIZE 16
-#define TX_WIFI_BUFFER_SIZE 2
+#define BUFFER_CAPACITY 32
+#define KEYPAD_BUFFER_SIZE 10
+#define FW_VERSION "1.0.0"
+#define PASSWORD "2806"
+#define OPEN_COMMAND "#O#"
+#define CLOSE_COMMAND "#C#"
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

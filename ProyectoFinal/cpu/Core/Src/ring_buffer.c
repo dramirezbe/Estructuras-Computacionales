@@ -9,6 +9,7 @@
  */
 
 #include "ring_buffer.h"
+#include <stdint.h>
 
 /**
  * @brief Initialize ring buffer structure
@@ -107,4 +108,61 @@ uint8_t ring_buffer_read(ring_buffer_t *rb, uint8_t *byte) {
     rb->tail = (rb->tail + 1) % rb->capacity;
     rb->is_full = 0;
     return 1;
+}
+
+
+/**
+ * @brief Muestra los elementos actuales del ring buffer por UART.
+ * @param rb        Puntero a la instancia del ring buffer.
+ * @param huart     Puntero al manejador de UART para la transmisión.
+ */
+void show_rb(ring_buffer_t *rb, UART_HandleTypeDef *huart) {
+    uint8_t size = ring_buffer_size(rb); // Obtener el número de elementos en el buffer
+
+    // Transmitir los elementos por UART
+    HAL_UART_Transmit(huart, (uint8_t *)"rb:", 3, 1000); // Encabezado
+
+    // Mostrar los elementos del ring buffer
+    for (uint8_t i = 0; i < size; i++) {
+        uint8_t index = (rb->tail + i) % rb->capacity; // Calcular el índice circular
+        HAL_UART_Transmit(huart, &rb->buffer[index], 1, 1000); // Transmitir cada byte
+    }
+
+    HAL_UART_Transmit(huart, (uint8_t *)"\r\n", 2, 1000); // Nueva línea
+}
+
+
+/**
+ * @brief Busca una cadena en el ring buffer, y si se encuentra, lo resetea.
+ * 
+ * @param str Cadena de caracteres a buscar (debe estar terminada en NULL).
+ * @param rb  Puntero a la instancia del ring buffer.
+ * @return uint8_t Retorna 1 si se encontró la cadena y se borró el buffer, 0 si no se encontró.
+ */
+uint8_t check_string_in_rb(const char *str, ring_buffer_t *rb) {
+    uint8_t rb_size = ring_buffer_size(rb);
+    size_t str_len = strlen(str);
+
+    // Si el string está vacío o el buffer tiene menos datos que la longitud del string, no hay coincidencia.
+    if (str_len == 0 || rb_size < str_len) {
+        return 0;
+    }
+
+    // Recorrer el buffer considerando la posición de tail y el comportamiento circular
+    for (uint8_t i = 0; i <= rb_size - str_len; i++) {
+        uint8_t match = 1;
+        for (size_t j = 0; j < str_len; j++) {
+            uint8_t index = (rb->tail + i + j) % rb->capacity;
+            if (rb->buffer[index] != (uint8_t)str[j]) {
+                match = 0;
+                break;
+            }
+        }
+        if (match) {
+            // Se encontró la cadena, se borra el ring buffer
+            ring_buffer_reset(rb);
+            return 1;
+        }
+    }
+    return 0;
 }

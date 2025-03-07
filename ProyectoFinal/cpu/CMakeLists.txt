@@ -50,9 +50,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     Drivers/dimmer/dimmer.c
     Drivers/DHT11/DHT11.c
-    Drivers/esp_wifi_handler/esp_wifi_handler.c
     Drivers/keypad/keypad.c
     Drivers/ssd1306/ssd1306.c
+    Drivers/ssd1306/ssd1306_fonts.c
     Core/Src/ring_buffer.c
 )
 
@@ -61,7 +61,6 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
     Drivers/dimmer
     Drivers/DHT11
-    Drivers/esp_wifi_handler
     Drivers/keypad
     Drivers/ssd1306
 )
